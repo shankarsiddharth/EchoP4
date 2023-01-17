@@ -74,3 +74,18 @@ def decrypt_password(encrypted_password):
     fernet = Fernet(key)
     decrypted_password = fernet.decrypt(encrypted_password).decode()
     return decrypted_password
+
+
+def get_log_file_data():
+    log_file_data = dict()
+    root_folder_path = get_root_folder()
+    if root_folder_path is None:
+        return None
+    log_folder_path = os.path.join(root_folder_path, ep4c.LOG_FOLDER_NAME)
+    log_folder = pathlib.Path(log_folder_path)
+    
+    if log_folder_path is None:
+        return None
+    echo_p4_config = get_echo_p4_config()
+    log_file_path = echo_p4_config[ep4c.ECHO_P4_CONFIG_SECTION][ep4c.KEY_LOG_FILE_PATH]
+    return log_file_path
