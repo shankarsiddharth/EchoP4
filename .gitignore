@@ -3,12 +3,14 @@ logs/
 docs/
 tmp/
 
-config/dpg.ini
-config/echo.p4.ini
-config/p4.ini
+config/*
+!config/defaults/
 
-data/group_members.json
-data/team_members.json
+data/*
+!data/defaults/
+
+tools/*
+!tools/defaults/
 
 src/misc/
 
