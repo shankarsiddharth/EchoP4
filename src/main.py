@@ -44,16 +44,13 @@ else:
         log.info("P4 Config file found.")
         user_p4_config = P4Config()
         is_login_success = user_p4_config.p4_login(user_p4_config_data=user_p4_config_data)
-        if not is_login_success:
+        while not is_login_success:
             log.info("P4 login failed with the saved data.")
             user_p4_config.delete_user_p4_config_file()
             log.info("Trying to create a new P4 config file for the current user...")
             user_p4_config = P4Config(user_echo_p4_config_data=user_echo_p4_config_data)
             user_p4_config_data = p4th.get_user_p4_config_data()
             is_login_success = user_p4_config.p4_login(user_p4_config_data=user_p4_config_data)
-            if not is_login_success:
-                log.info("Closing the Config UI...")
-                user_p4_config.close_ui()
         print(user_p4_config_data)
 
 # sys.exit(0)
