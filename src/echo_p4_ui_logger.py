@@ -114,7 +114,7 @@ class EchoP4UILogger:
         elif level == logging.INFO:
             self.ui_message = "[INFO]\t\t" + self.log_message
             theme = self.info_theme
-        elif level == logging.getLevelName(c_logging.log_level_success):
+        elif level == c_logging.log_level_success:
             self.ui_message = "[SUCCESS]\t\t" + self.log_message
             theme = self.success_theme
         elif level == logging.WARNING:
@@ -143,7 +143,7 @@ class EchoP4UILogger:
         self._log(logging.INFO, message, *args)
 
     def success(self, message, *args):
-        self._log(logging.getLevelName(c_logging.log_level_success), message, *args)
+        self._log(c_logging.log_level_success, message, *args)
 
     def warning(self, message, *args):
         self._log(logging.WARNING, message, *args)
