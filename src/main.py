@@ -56,7 +56,7 @@ else:
                 user_p4_config.close_ui()
         print(user_p4_config_data)
 
-sys.exit(0)
+# sys.exit(0)
 
 p4_config = p4th.get_user_p4_config_data()
 encrypted_password = p4_config[echo_p4_constants.P4_CONFIG_SECTION][echo_p4_constants.KEY_P4PASSWD]
