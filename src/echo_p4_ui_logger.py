@@ -1,5 +1,8 @@
-import dearpygui.dearpygui as dpg
 import logging
+
+import dearpygui.dearpygui as dpg
+
+import custom_logging as c_logging
 
 
 class EchoP4UILogger:
@@ -35,13 +38,17 @@ class EchoP4UILogger:
 
         with dpg.theme() as self.trace_theme:
             with dpg.theme_component(0):
-                dpg.add_theme_color(dpg.mvThemeCol_Text, (255, 255, 255, 255))
+                dpg.add_theme_color(dpg.mvThemeCol_Text, (255, 127, 80, 255))
 
         with dpg.theme() as self.debug_theme:
             with dpg.theme_component(0):
                 dpg.add_theme_color(dpg.mvThemeCol_Text, (64, 128, 255, 255))
 
         with dpg.theme() as self.info_theme:
+            with dpg.theme_component(0):
+                dpg.add_theme_color(dpg.mvThemeCol_Text, (255, 255, 255, 255))
+
+        with dpg.theme() as self.success_theme:
             with dpg.theme_component(0):
                 dpg.add_theme_color(dpg.mvThemeCol_Text, (0, 255, 0, 255))
 
@@ -70,7 +77,7 @@ class EchoP4UILogger:
         if show_all_logs:
             dpg.set_value(self.filter_id, '')
         else:
-            dpg.set_value(self.filter_id, 'INFO, WARNING, ERROR, CRITICAL')
+            dpg.set_value(self.filter_id, 'INFO, SUCCESS, WARNING, ERROR, CRITICAL')
 
     def __callback_on_filter_text_changed(self, sender):
         filter_text = dpg.get_value(self._filter_text_tag)
@@ -81,7 +88,7 @@ class EchoP4UILogger:
             dpg.configure_item(self._show_all_logs_tag, default_value=False)
             self.__on_show_all_logs()
 
-    def _log(self, message, level):
+    def _log(self, level, message, *args):
 
         if level < self.log_level:
             return
@@ -92,49 +99,60 @@ class EchoP4UILogger:
             self.clear_log()
 
         theme = self.info_theme
+        self.ui_message = message
+        self.log_message = message
+        if args:
+            self.log_message = message % args
+            print("Compiled Message : ", self.log_message)
 
         if level == logging.NOTSET:
-            message = "[TRACE]\t\t" + message
+            self.ui_message = "[TRACE]\t\t" + self.log_message
             theme = self.trace_theme
         elif level == logging.DEBUG:
-            message = "[DEBUG]\t\t" + message
+            self.ui_message = "[DEBUG]\t\t" + self.log_message
             theme = self.debug_theme
         elif level == logging.INFO:
-            message = "[INFO]\t\t" + message
+            self.ui_message = "[INFO]\t\t" + self.log_message
             theme = self.info_theme
+        elif level == logging.getLevelName(c_logging.log_level_success):
+            self.ui_message = "[SUCCESS]\t\t" + self.log_message
+            theme = self.success_theme
         elif level == logging.WARNING:
-            message = "[WARNING]\t\t" + message
+            self.ui_message = "[WARNING]\t\t" + self.log_message
             theme = self.warning_theme
         elif level == logging.ERROR:
-            message = "[ERROR]\t\t" + message
+            self.ui_message = "[ERROR]\t\t" + self.log_message
             theme = self.error_theme
         elif level == logging.CRITICAL:
-            message = "[CRITICAL]\t\t" + message
+            self.ui_message = "[CRITICAL]\t\t" + self.log_message
             theme = self.critical_theme
 
-        new_log = dpg.add_text(message, parent=self.filter_id, filter_key=message)
+        new_log = dpg.add_text(self.ui_message, parent=self.filter_id, filter_key=self.ui_message)
         dpg.bind_item_theme(new_log, theme)
         if self._auto_scroll:
             scroll_max = dpg.get_y_scroll_max(self.child_id)
             dpg.set_y_scroll(self.child_id, -1.0)
 
-    def trace(self, message):
-        self._log(message, logging.NOTSET)
+    def trace(self, message, *args):
+        self._log(logging.NOTSET, message, *args)
 
-    def log_debug(self, message):
-        self._log(message, logging.DEBUG)
+    def debug(self, message, *args):
+        self._log(logging.DEBUG, message, *args)
 
-    def log_info(self, message):
-        self._log(message, logging.INFO)
+    def info(self, message, *args):
+        self._log(logging.INFO, message, *args)
 
-    def log_warning(self, message):
-        self._log(message, logging.WARNING)
+    def success(self, message, *args):
+        self._log(logging.getLevelName(c_logging.log_level_success), message, *args)
 
-    def log_error(self, message):
-        self._log(message, logging.ERROR)
+    def warning(self, message, *args):
+        self._log(logging.WARNING, message, *args)
 
-    def log_critical(self, message):
-        self._log(message, logging.CRITICAL)
+    def error(self, message, *args):
+        self._log(logging.ERROR, message, *args)
+
+    def critical(self, message, *args):
+        self._log(logging.CRITICAL, message, *args)
 
     def clear_log(self):
         dpg.delete_item(self.filter_id, children_only=True)

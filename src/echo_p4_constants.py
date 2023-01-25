@@ -2,7 +2,7 @@
 
 # ========================== START Application Constants ===================================
 # Application Folder Constants
-P4TOOLS_FOLDER_NAME = "P4Tools"
+# P4TOOLS_FOLDER_NAME = "P4Tools"
 BINARY_FOLDER_NAME = "bin"
 CONFIG_FOLDER_NAME = "config"
 CONFIG_DEFAULTS_FOLDER_NAME = "defaults"
@@ -26,8 +26,8 @@ DEFAULT_P4_INI_FILE_NAME = "p4.default.ini"
 P4_INI_FILE_NAME = "p4.ini"
 
 # Team Member JSON File Constants
-TEAM_MEMBERS_JSON_FILE_NAME = "team_members.json"
-GROUP_MEMBERS_JSON_FILE_NAME = "group_members.json"
+GROUP_MEMBERS_INFO_JSON_FILE_NAME = "group_members_info.json"
+GROUP_INFO_JSON_FILE_NAME = "group_info.json"
 
 # P4 Custom Tools XML File Constants
 DEFAULT_P4_CUSTOM_TOOLS_XML_FILE_NAME = "echo_p4_tool.default.xml"
@@ -48,7 +48,7 @@ DEFAULT_P4_IGNORE_FILE_NAME = ".p4ignore"
 # Echo P4 Config Keys
 ECHO_P4_CONFIG_SECTION: str = "ECHO_P4_CONFIG"
 
-KEY_P4TOOLS_FOLDER_PATH: str = "P4TOOLS_FOLDER_PATH"
+# KEY_P4TOOLS_FOLDER_PATH: str = "P4TOOLS_FOLDER_PATH"
 KEY_BINARY_FOLDER_PATH: str = "BINARY_FOLDER_PATH"
 KEY_CONFIG_FOLDER_PATH: str = "CONFIG_FOLDER_PATH"
 KEY_CONFIG_DEFAULTS_FOLDER_PATH: str = "CONFIG_DEFAULTS_FOLDER_PATH"

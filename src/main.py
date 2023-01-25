@@ -10,30 +10,60 @@ import dearpygui.dearpygui as dpg
 from dearpygui_ext import themes
 
 import echo_p4_constants
-import echo_p4_logger
+import echo_p4_logger as ep4l
 import p4_tools_helper as p4th
-from p4_config_ui import P4ConfigUI
+from p4_config import P4Config
+from echo_p4_config import EchoP4Config
+
+# Initialize the logger
+log = ep4l.EchoP4Logger()
+log.info("sys.flags.dev_mode : %s", sys.flags.dev_mode)
+
+# sys.exit(0)
 
 # TODO: Check if the file p4.ini exists in the config folder.
 # If exists, then load the values from the file and start the tool UI
-# If not, then show the config UI and then start the tool UI.
+# If not, then show the config UI and then start the tool UI on success.
 
-echo_p4_config = p4th.get_echo_p4_config()
+user_echo_p4_config_data = p4th.get_user_echo_p4_config_data()
+user_p4_config_data = p4th.get_user_p4_config_data()
 
-config_ui = P4ConfigUI(echo_p4_config=echo_p4_config, is_debug=True)
-print(config_ui.get_user_data())
+if user_echo_p4_config_data is None:
+    log.info("No application config file found.")
+    log.info("Trying to create a new config file for the current user...")
+    user_echo_p4_config = EchoP4Config()
+    log.info("New application config file created for the current user.")
+else:
+    log.info("Application Config file found. Checking for P4 user config...")
+    if user_p4_config_data is None:
+        log.info("No P4 config file found.")
+        log.info("Trying to create a new P4 config file for the current user...")
+        user_p4_config = P4Config(user_echo_p4_config_data=user_echo_p4_config_data)
+        log.info("New P4 config file created for the current user.")
+    else:
+        log.info("P4 Config file found.")
+        user_p4_config = P4Config()
+        is_login_success = user_p4_config.p4_login(user_p4_config_data=user_p4_config_data)
+        if not is_login_success:
+            log.info("P4 login failed with the saved data.")
+            user_p4_config.delete_user_p4_config_file()
+            log.info("Trying to create a new P4 config file for the current user...")
+            user_p4_config = P4Config(user_echo_p4_config_data=user_echo_p4_config_data)
+            user_p4_config_data = p4th.get_user_p4_config_data()
+            is_login_success = user_p4_config.p4_login(user_p4_config_data=user_p4_config_data)
+            if not is_login_success:
+                log.info("Closing the Config UI...")
+                user_p4_config.close_ui()
+        print(user_p4_config_data)
 
-p4_config = p4th.get_p4_config()
+sys.exit(0)
+
+p4_config = p4th.get_user_p4_config_data()
 encrypted_password = p4_config[echo_p4_constants.P4_CONFIG_SECTION][echo_p4_constants.KEY_P4PASSWD]
 decrypted_password = p4th.decrypt_password(encrypted_password)
 print("Decrypted password: " + decrypted_password)
-sys.exit(0)
-
-# Initialize the logger
-log = echo_p4_logger.EchoP4Logger()
 
 # Constants
-is_debug = True
 is_load_default_layout_clicked = False
 # is_menu_close_button_clicked = False
 is_window_close_button_clicked = False
@@ -81,8 +111,8 @@ def init_and_render_ui():
     dark_theme_id = themes.create_theme_imgui_dark()
     dpg.bind_theme(dark_theme_id)
 
-    # global is_debug
-    dpg.configure_app(manual_callback_management=is_debug, docking=True, docking_space=True, init_file="../config/" + echo_p4_constants.DPG_INI_FILE_NAME, load_init_file=True)
+    dpg.configure_app(manual_callback_management=sys.flags.dev_mode, docking=True, docking_space=True, init_file="../config/" + echo_p4_constants.DPG_INI_FILE_NAME,
+                      load_init_file=True)
 
     dpg.create_viewport(title=echo_p4_constants.ECHO_P4_TOOL_WINDOW_TITLE, width=VIEWPORT_WIDTH, height=VIEWPORT_HEIGHT)
 
@@ -101,7 +131,7 @@ def init_and_render_ui():
         dpg.add_input_text(label="string", default_value="Quick brown fox")
         dpg.add_slider_float(label="float", default_value=0.273, max_value=1)
 
-    log.init_ui(is_debug=is_debug)
+    log.init_ui()
 
     dpg.setup_dearpygui()
     dpg.show_viewport()
@@ -111,7 +141,7 @@ def init_and_render_ui():
     # below replaces, start_dearpygui()
     while dpg.is_dearpygui_running():
 
-        if is_debug:
+        if sys.flags.dev_mode:
             jobs = dpg.get_callback_queue()  # retrieves and clears queue
             dpg.run_callbacks(jobs)
 

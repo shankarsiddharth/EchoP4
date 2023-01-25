@@ -13,8 +13,8 @@ def main():
 
     root_folder_path = p4th.get_root_folder()
     data_folder_path = os.path.join(root_folder_path, ep4c.DATA_FOLDER_NAME)
-    team_members_json_file_path = os.path.join(data_folder_path, ep4c.TEAM_MEMBERS_JSON_FILE_NAME)
-    group_members_json_file_path = os.path.join(data_folder_path, ep4c.GROUP_MEMBERS_JSON_FILE_NAME)
+    team_members_json_file_path = os.path.join(data_folder_path, ep4c.GROUP_MEMBERS_INFO_JSON_FILE_NAME)
+    group_members_json_file_path = os.path.join(data_folder_path, ep4c.GROUP_INFO_JSON_FILE_NAME)
 
     data_folder = pathlib.Path(data_folder_path)
     if not data_folder.exists():
@@ -30,7 +30,7 @@ def main():
     print("Data folder exists.")
 
     # try:
-    #     with open('team_members.json', 'r', encoding='UTF-8') as team_members_json:
+    #     with open('group_members_info.json', 'r', encoding='UTF-8') as team_members_json:
     #         team_members = json.load(team_members_json)
     # except FileNotFoundError as errorMessage:
     #     print(f"FileNotFoundError \n" f"{errorMessage}")
