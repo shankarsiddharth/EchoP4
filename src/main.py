@@ -47,18 +47,27 @@ else:
         while not is_login_success:
             log.info("P4 login failed with the saved data.")
             user_p4_config.delete_user_p4_config_file()
+            log.info("Resetting the application config file...")
+            user_echo_p4_config = EchoP4Config()
+            user_echo_p4_config_data = p4th.get_user_echo_p4_config_data()
             log.info("Trying to create a new P4 config file for the current user...")
             user_p4_config = P4Config(user_echo_p4_config_data=user_echo_p4_config_data)
             user_p4_config_data = p4th.get_user_p4_config_data()
             is_login_success = user_p4_config.p4_login(user_p4_config_data=user_p4_config_data)
         print(user_p4_config_data)
 
+log.info('User Login Successful.')
+log.info("Starting the application...")
+
 # sys.exit(0)
 
-p4_config = p4th.get_user_p4_config_data()
-encrypted_password = p4_config[echo_p4_constants.P4_CONFIG_SECTION][echo_p4_constants.KEY_P4PASSWD]
-decrypted_password = p4th.decrypt_password(encrypted_password)
-print("Decrypted password: " + decrypted_password)
+# TODO: Generate the Group Info and the Group Member details using the P4 login data.
+# TODO: Add a simple UI to get the Group Name.
+
+# p4_config = p4th.get_user_p4_config_data()
+# encrypted_password = p4_config[echo_p4_constants.P4_CONFIG_SECTION][echo_p4_constants.KEY_P4PASSWD]
+# decrypted_password = p4th.decrypt_password(encrypted_password)
+# print("Decrypted password: " + decrypted_password)
 
 # Constants
 is_load_default_layout_clicked = False
