@@ -48,6 +48,7 @@ def get_user_p4_config_file_path():
 # TODO: Key should be stored in a secure location, not in the code
 # Generate a key and store it in a file when the application login is successful which is not in the code
 # Generated key should be unique for each user
+# Delete the key file when the user login fails
 def encrypt_password(plain_text_password):
     key = 'mt1ae3whDt_f0VPNW1A2Tdg_UO7mZnqHwhFCFoQicGE='.encode('utf-8')
     # key = Fernet.generate_key()
