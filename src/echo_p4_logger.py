@@ -6,7 +6,7 @@ import threading
 from logging.handlers import SocketHandler
 
 import custom_logging as c_logging
-import echo_p4_ui_logger
+from echo_p4_ui_logger import EchoP4UILogger
 import echo_p4_constants as ep4c
 import p4_tools_helper as p4th
 
@@ -109,15 +109,22 @@ class EchoP4Logger(object):
         # self.flush_count = 10000
 
     def init_ui(self, parent=None):
-        self.ui_logger = echo_p4_ui_logger.EchoP4UILogger(parent=parent)
+        self.ui_logger: EchoP4UILogger = EchoP4UILogger(parent=parent)
         self.ui_logger.trace("Echo P4 UI Logger Started")
         if sys.flags.dev_mode:
-            self.ui_logger.log_debug('Test Debug')
-            self.ui_logger.log_info('Test Info')
-            self.ui_logger.log_success('Test Success')
-            self.ui_logger.log_warning('Test Warning')
-            self.ui_logger.log_error('Test Error')
-            self.ui_logger.log_critical('Test Critical')
+            self.ui_logger.debug('Test UI Debug')
+            self.ui_logger.info('Test UI Info')
+            self.ui_logger.success('Test UI Success')
+            self.ui_logger.warning('Test UI Warning')
+            self.ui_logger.error('Test UI Error')
+            self.ui_logger.critical('Test UI Critical')
+
+            self.debug('Test Debug')
+            self.info('Test Info')
+            self.success('Test Success')
+            self.warning('Test Warning')
+            self.error('Test Error')
+            self.critical('Test Critical')
 
     def _log(self, level, message, *args):
 
@@ -149,8 +156,8 @@ class EchoP4Logger(object):
             if self.ui_logger is not None and self.should_log_to_ui:
                 self.ui_logger.info(message, *args)
 
-        elif level == logging.getLevelName(c_logging.log_level_success):
-            self.logger_instance.log(logging.getLevelName(c_logging.log_level_success), message, *args)
+        elif level == c_logging.log_level_success:
+            self.logger_instance.log(c_logging.log_level_success, message, *args)
             if self.ui_logger is not None and self.should_log_to_ui:
                 self.ui_logger.success(message, *args)
 
@@ -181,7 +188,7 @@ class EchoP4Logger(object):
         self._log(logging.INFO, message, *args)
 
     def success(self, message, *args: object):
-        self._log(logging.getLevelName(c_logging.log_level_success), message, *args)
+        self._log(c_logging.log_level_success, message, *args)
 
     def warning(self, message, *args: object):
         self._log(logging.WARNING, message, *args)
