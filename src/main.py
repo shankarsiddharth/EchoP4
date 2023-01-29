@@ -14,9 +14,10 @@ import echo_p4_logger as ep4l
 import p4_tools_helper as p4th
 from p4_config import P4Config
 from echo_p4_config import EchoP4Config
+from app_globals import log
+from p4_group_info_config import P4GroupInfoConfig
 
-# Initialize the logger
-log = ep4l.EchoP4Logger()
+# Log the dev mode flag
 log.info("sys.flags.dev_mode : %s", sys.flags.dev_mode)
 
 # sys.exit(0)
@@ -54,12 +55,11 @@ else:
             user_p4_config = P4Config(user_echo_p4_config_data=user_echo_p4_config_data)
             user_p4_config_data = p4th.get_user_p4_config_data()
             is_login_success = user_p4_config.p4_login(user_p4_config_data=user_p4_config_data)
-        print(user_p4_config_data)
 
 log.info('User Login Successful.')
 log.info("Starting the application...")
-
-# sys.exit(0)
+group_info_config = P4GroupInfoConfig(user_echo_p4_config_data, user_p4_config_data)
+sys.exit(0)
 
 # TODO: Generate the Group Info and the Group Member details using the P4 login data.
 # TODO: Add a simple UI to get the Group Name.
