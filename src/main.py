@@ -16,58 +16,7 @@ from p4_config import P4Config
 from echo_p4_config import EchoP4Config
 from app_globals import log
 from p4_group_info_config import P4GroupInfoConfig
-
-# Log the dev mode flag
-log.info("sys.flags.dev_mode : %s", sys.flags.dev_mode)
-
-# sys.exit(0)
-
-# TODO: Check if the file p4.ini exists in the config folder.
-# If exists, then load the values from the file and start the tool UI
-# If not, then show the config UI and then start the tool UI on success.
-
-user_echo_p4_config_data = p4th.get_user_echo_p4_config_data()
-user_p4_config_data = p4th.get_user_p4_config_data()
-
-if user_echo_p4_config_data is None:
-    log.info("No application config file found.")
-    log.info("Trying to create a new config file for the current user...")
-    user_echo_p4_config = EchoP4Config()
-    log.info("New application config file created for the current user.")
-else:
-    log.info("Application Config file found. Checking for P4 user config...")
-    if user_p4_config_data is None:
-        log.info("No P4 config file found.")
-        log.info("Trying to create a new P4 config file for the current user...")
-        user_p4_config = P4Config(user_echo_p4_config_data=user_echo_p4_config_data)
-        log.info("New P4 config file created for the current user.")
-    else:
-        log.info("P4 Config file found.")
-        user_p4_config = P4Config()
-        is_login_success = user_p4_config.p4_login(user_p4_config_data=user_p4_config_data)
-        while not is_login_success:
-            log.info("P4 login failed with the saved data.")
-            user_p4_config.delete_user_p4_config_file()
-            log.info("Resetting the application config file...")
-            user_echo_p4_config = EchoP4Config()
-            user_echo_p4_config_data = p4th.get_user_echo_p4_config_data()
-            log.info("Trying to create a new P4 config file for the current user...")
-            user_p4_config = P4Config(user_echo_p4_config_data=user_echo_p4_config_data)
-            user_p4_config_data = p4th.get_user_p4_config_data()
-            is_login_success = user_p4_config.p4_login(user_p4_config_data=user_p4_config_data)
-
-log.info('User Login Successful.')
-log.info("Starting the application...")
-group_info_config = P4GroupInfoConfig(user_echo_p4_config_data, user_p4_config_data)
-sys.exit(0)
-
-# TODO: Generate the Group Info and the Group Member details using the P4 login data.
-# TODO: Add a simple UI to get the Group Name.
-
-# p4_config = p4th.get_user_p4_config_data()
-# encrypted_password = p4_config[echo_p4_constants.P4_CONFIG_SECTION][echo_p4_constants.KEY_P4PASSWD]
-# decrypted_password = p4th.decrypt_password(encrypted_password)
-# print("Decrypted password: " + decrypted_password)
+from application_initial_setup import ApplicationInitialSetup
 
 # Constants
 is_load_default_layout_clicked = False
@@ -187,4 +136,6 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    ApplicationInitialSetup()
+    log.info("Starting the application...")
     main()
