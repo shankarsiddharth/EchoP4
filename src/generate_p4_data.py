@@ -69,7 +69,8 @@ def main():
 
         p4.disconnect()  # Disconnect from the server
 
-    except P4Exception:
+    except P4Exception as e:
+        print(e)
 
         for errorMessage in p4.errors:  # Display errors
             print(errorMessage)
