@@ -103,7 +103,6 @@ class EchoP4UILogger:
         self.log_message = message
         if args:
             self.log_message = message % args
-            print("Compiled Message : ", self.log_message)
 
         if level == logging.NOTSET:
             self.ui_message = "[TRACE]\t\t" + self.log_message

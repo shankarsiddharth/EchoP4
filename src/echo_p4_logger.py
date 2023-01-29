@@ -139,7 +139,6 @@ class EchoP4Logger(object):
         self.log_message = message
         if args:
             self.log_message = message % args
-            print("Compiled Message : ", self.log_message)
 
         if logging.NOTSET <= level < logging.DEBUG:
             self.logger_instance.log(1, message, *args)
