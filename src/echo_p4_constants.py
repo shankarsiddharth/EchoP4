@@ -25,6 +25,10 @@ DPG_INI_FILE_NAME = "dpg.ini"
 DEFAULT_P4_INI_FILE_NAME = "p4.default.ini"
 P4_INI_FILE_NAME = "p4.ini"
 
+# P4 Group INI File Constants
+DEFAULT_P4_GROUP_INI_FILE_NAME = "p4.group.default.ini"
+P4_GROUP_INI_FILE_NAME = "p4.group.ini"
+
 # Team Member JSON File Constants
 GROUP_MEMBERS_INFO_JSON_FILE_NAME = "group_members_info.json"
 GROUP_INFO_JSON_FILE_NAME = "group_info.json"
@@ -68,6 +72,9 @@ KEY_DPG_INI_FILE_PATH: str = "DPG_INI_FILE_PATH"
 KEY_DEFAULT_P4_INI_FILE_PATH: str = "DEFAULT_P4_INI_FILE_PATH"
 KEY_P4_INI_FILE_PATH: str = "P4_INI_FILE_PATH"
 
+KEY_DEFAULT_P4_GROUP_INI_FILE_PATH: str = "DEFAULT_P4_GROUP_INI_FILE_PATH"
+KEY_P4_GROUP_INI_FILE_PATH: str = "P4_GROUP_INI_FILE_PATH"
+
 KEY_TEAM_MEMBERS_JSON_FILE_PATH: str = "TEAM_MEMBERS_JSON_FILE_PATH"
 
 KEY_DEFAULT_P4_CUSTOM_TOOLS_XML_FILE_PATH: str = "DEFAULT_P4_CUSTOM_TOOLS_XML_FILE_PATH"
@@ -80,6 +87,10 @@ KEY_P4USER: str = "p4user"
 KEY_P4CLIENT: str = "p4client"
 KEY_P4IGNORE: str = "p4ignore"
 KEY_P4PASSWD: str = "p4passwd"
+
+# P4 Group Config Keys
+P4_GROUP_CONFIG_SECTION: str = "P4_GROUP_CONFIG"
+KEY_P4GROUP: str = "p4group"
 
 # ========================== END Config File Key Constants ===================================
 
