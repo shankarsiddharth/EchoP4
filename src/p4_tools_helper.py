@@ -14,6 +14,20 @@ def get_root_folder():
     return root_folder_path
 
 
+def get_user_p4_config_file_path():
+    root_folder = get_root_folder()
+    config_folder_path = os.path.join(root_folder, ep4c.CONFIG_FOLDER_NAME)
+    p4_ini_file_path = os.path.join(config_folder_path, ep4c.P4_INI_FILE_NAME)
+    return p4_ini_file_path
+
+
+def get_user_p4_group_config_file_path():
+    root_folder = get_root_folder()
+    config_folder_path = os.path.join(root_folder, ep4c.CONFIG_FOLDER_NAME)
+    p4_group_ini_file_path = os.path.join(config_folder_path, ep4c.P4_GROUP_INI_FILE_NAME)
+    return p4_group_ini_file_path
+
+
 def get_user_echo_p4_config_data():
     root_folder = get_root_folder()
     config_folder_path = os.path.join(root_folder, ep4c.CONFIG_FOLDER_NAME)
@@ -38,11 +52,15 @@ def get_user_p4_config_data():
     return p4_config
 
 
-def get_user_p4_config_file_path():
-    root_folder = get_root_folder()
-    config_folder_path = os.path.join(root_folder, ep4c.CONFIG_FOLDER_NAME)
-    p4_ini_file_path = os.path.join(config_folder_path, ep4c.P4_INI_FILE_NAME)
-    return p4_ini_file_path
+def get_user_p4_group_config_data():
+    p4_group_ini_file_path = get_user_p4_group_config_file_path()
+    p4_group_ini_file = pathlib.Path(p4_group_ini_file_path)
+    if not p4_group_ini_file.exists():
+        print("P4 Group file not found in the path: ", p4_group_ini_file_path)
+        return None
+    p4_group_config = configparser.ConfigParser()
+    p4_group_config.read(p4_group_ini_file_path)
+    return p4_group_config
 
 
 # TODO: Key should be stored in a secure location, not in the code
@@ -66,7 +84,6 @@ def decrypt_password(encrypted_password):
     decrypted_password = ''
     try:
         decrypted_password = fernet.decrypt(encrypted_password.encode()).decode()
-    except:
-        e = sys.exc_info()[0]
-        print("Unexpected error:", sys.exc_info()[0])
+    except Exception as e:
+        print("Unexpected error:", e)
     return decrypted_password
