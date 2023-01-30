@@ -1,7 +1,6 @@
 import configparser
 import os
 import pathlib
-import platform
 import sys
 import threading
 import json
@@ -12,9 +11,9 @@ from dearpygui_ext import themes
 
 import echo_p4_constants as ep4c
 import p4_tools_helper as p4th
-from echo_p4_logger import EchoP4Logger
+from app_error import AppError
+from app_exit import AppExit
 from app_globals import log
-from app_exception import AppException
 
 
 class P4GroupInfoConfigController(object):
@@ -101,7 +100,7 @@ class P4GroupInfoConfigController(object):
                 log_text = "Error: Group details not found for Group: %s" + group_name
                 log.error(log_text)
                 result['message'] = log_text
-                raise AppException(log_text)
+                raise AppError(log_text)
 
             log.info("Group details found for Group: %s", group_name)
             with open(group_members_json_file_path, 'w', encoding='UTF-8') as group_members_json:
@@ -117,7 +116,7 @@ class P4GroupInfoConfigController(object):
                     log_text = "Error: User details not found for User: %s" + user
                     log.error(log_text)
                     result['message'] = log_text
-                    raise AppException(log_text)
+                    raise AppError(log_text)
                 team_members[user] = user_details[0]
             with open(team_members_json_file_path, 'w', encoding='UTF-8') as team_members_json:
                 json.dump(team_members, team_members_json, indent=4)
@@ -127,7 +126,7 @@ class P4GroupInfoConfigController(object):
             p4.disconnect()
         except P4Exception as e:
             log.error(e)
-        except AppException as e:
+        except AppError as e:
             log.error(e)
         finally:
             if p4.connected():
@@ -166,16 +165,30 @@ class P4GroupInfoConfigController(object):
         return result
 
 
-class P4GroupInfoUI(object):
+class P4GroupInfoUI(threading.Thread):
     __minimum_width__ = 700
     __minimum_height__ = 500
 
     def __init__(self, user_echo_p4_config_data=None, user_p4_config_data=None, p4_group_list=None, p4_group_config_controller=None, user=None, password=None, port=None,
                  viewport_width=__minimum_width__, viewport_height=__minimum_height__):
+        super().__init__()
+
+        self.exception = None
+
         if p4_group_config_controller is None or user_echo_p4_config_data is None or user_p4_config_data is None or p4_group_list is None or user is None or password is None \
                 or port is None:
-            log.error("Invalid arguments passed to the GroupConfigUI constructor.")
-            sys.exit(1)
+            self.p4_group_config_controller = None
+            self.user_echo_p4_config_data = None
+            self.user_p4_config_data = None
+            self.p4_group_list = None
+            self.user = None
+            self.password = None
+            self.port = None
+            if p4_group_list is not None:
+                if len(p4_group_list) == 0:
+                    self.p4_group_list = None
+            return
+
         self.user_echo_p4_config_data = user_echo_p4_config_data
         self.user_p4_config_data = user_p4_config_data
         self.p4_group_list = p4_group_list
@@ -185,10 +198,6 @@ class P4GroupInfoUI(object):
         self.port = port
 
         self.user = self.user_p4_config_data[ep4c.P4_CONFIG_SECTION][ep4c.KEY_P4USER]
-
-        if self.p4_group_list is None or len(self.p4_group_list) == 0:
-            log.error("No groups found for the user: " + self.user)
-            sys.exit(1)
 
         # Remove the Cohort-12 group from the list
         if "Cohort-12" in self.p4_group_list:
@@ -213,7 +222,27 @@ class P4GroupInfoUI(object):
         self.log_height = viewport_height - 350
         self.auto_close_ui = False
         self.user_close_ui = False
-        self.__init_ui__()
+
+    def run(self):
+        try:
+            if self.p4_group_config_controller is None or self.user_echo_p4_config_data is None or self.user_p4_config_data is None or self.p4_group_list is None \
+                    or self.user is None or self.password is None or self.port is None:
+                exception_message = "Invalid arguments passed to the GroupConfigUI constructor."
+                log.error(exception_message)
+                raise AppError(exception_message)
+            elif self.p4_group_list is not None and len(self.p4_group_list) == 0:
+                exception_message = "No groups found for the user: " + self.user
+                log.error(exception_message)
+                raise AppError(exception_message)
+            self.__init_ui__()
+        except BaseException as e:
+            self.exception = e
+
+    def join(self, **kwargs):
+        threading.Thread.join(self, **kwargs)
+        # since join() returns in caller thread we re-raise the caught exception if any was caught
+        if self.exception:
+            raise self.exception
 
     def close_ui(self):
         self.auto_close_ui = True
@@ -367,9 +396,12 @@ class P4GroupInfoConfig(object):
 
     def init_and_render_ui(self, p4_group_list):
         self.p4_group_config_ui = P4GroupInfoUI(user_echo_p4_config_data=self.user_echo_p4_config_data, user_p4_config_data=self.user_p4_config_data, p4_group_list=p4_group_list,
-                                                p4_group_config_controller=self.p4_group_config_controller,
-                                                user=self.user, password=self.password, port=self.port)
-        pass
+                                                p4_group_config_controller=self.p4_group_config_controller, user=self.user, password=self.password, port=self.port)
+        self.p4_group_config_ui.start()
+        try:
+            self.p4_group_config_ui.join()
+        except Exception as e:
+            raise e
 
     def __init__(self, user_echo_p4_config_data=None, user_p4_config_data=None):
         if user_echo_p4_config_data is None or user_p4_config_data is None:
@@ -391,13 +423,11 @@ class P4GroupInfoConfig(object):
             return
         self.p4_group_config_ui = None
 
-        dpg_thread = threading.Thread(target=self.init_and_render_ui, args=[self.p4_group_list])
-        dpg_thread.start()
-        dpg_thread.join()
+        self.init_and_render_ui(p4_group_list=self.p4_group_list)
 
         if self.p4_group_config_ui is not None:
             if self.p4_group_config_ui.user_close_ui:
-                sys.exit(0)
+                raise AppExit()
 
     def is_group_list_empty(self):
         return self.is_empty_group_list

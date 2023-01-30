@@ -17,6 +17,8 @@ from echo_p4_config import EchoP4Config
 from app_globals import log
 from p4_group_info_config import P4GroupInfoConfig
 from application_initial_setup import ApplicationInitialSetup
+from app_exit import AppExit
+from app_error import AppError
 
 # Constants
 is_load_default_layout_clicked = False
@@ -136,6 +138,19 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    ApplicationInitialSetup()
+
+    try:
+        ApplicationInitialSetup()
+    except AppExit as e:
+        log.info("Application is exiting...")
+        sys.exit(0)
+    except AppError as e:
+        log.error(str(e))
+        sys.exit(0)
+    except BaseException as e:
+        log.error("Error occurred while initializing the application: " + str(e))
+        sys.exit(0)
+
     log.info("Starting the application...")
+
     main()

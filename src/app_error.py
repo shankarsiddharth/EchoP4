@@ -1,3 +1,4 @@
+import os
 import sys
 
 import dearpygui.dearpygui as dpg
@@ -110,11 +111,14 @@ class AppErrorUI(object):
         dpg.destroy_context()
 
 
-class AppError(object):
+class AppError(Exception):
 
     def __init__(self, message=None):
+        self.message = message
         self.app_error_ui = AppErrorUI(message=message)
 
-
-if __name__ == "__main__":
-    app_error = AppError(message="This is an error message.")
+    def __str__(self):
+        if self.message is None:
+            return "Application Error"
+        else:
+            return self.message

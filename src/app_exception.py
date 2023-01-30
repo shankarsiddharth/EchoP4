@@ -1,3 +1,0 @@
-
-class AppException(Exception):
-    pass
