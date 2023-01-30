@@ -1,6 +1,5 @@
-import os
-import sys
 import configparser
+import os
 import pathlib
 
 from cryptography.fernet import Fernet
@@ -15,6 +14,13 @@ def get_root_folder():
     bin_src_folder = os.path.dirname(os.path.realpath(__file__))
     root_folder_path = os.path.dirname(bin_src_folder)
     return root_folder_path
+
+
+def get_user_echo_p4_config_file_path():
+    root_folder = get_root_folder()
+    config_folder_path = os.path.join(root_folder, ep4c.CONFIG_FOLDER_NAME)
+    echo_p4_ini_file_path = os.path.join(config_folder_path, ep4c.ECHO_P4_INI_FILE_NAME)
+    return echo_p4_ini_file_path
 
 
 def get_user_p4_config_file_path():
@@ -46,9 +52,7 @@ def get_group_members_info_file_path():
 
 
 def get_user_echo_p4_config_data():
-    root_folder = get_root_folder()
-    config_folder_path = os.path.join(root_folder, ep4c.CONFIG_FOLDER_NAME)
-    echo_p4_ini_file_path = os.path.join(config_folder_path, ep4c.ECHO_P4_INI_FILE_NAME)
+    echo_p4_ini_file_path = get_user_echo_p4_config_file_path()
     echo_p4_ini_file = pathlib.Path(echo_p4_ini_file_path)
     if not echo_p4_ini_file.exists():
         print("Echo P4 file not found in the path: ", echo_p4_ini_file_path)
@@ -149,3 +153,33 @@ def decrypt_password(encrypted_password):
         delete_key()
         # print("Unexpected error:", e)
     return decrypted_password
+
+
+def reset_user_data():
+    # Delete the user echo p4 config file
+    echo_p4_ini_file_path = get_user_echo_p4_config_file_path()
+    echo_p4_ini_file = pathlib.Path(echo_p4_ini_file_path)
+    if echo_p4_ini_file.exists():
+        os.remove(echo_p4_ini_file_path)
+    # Delete the user p4 config file
+    p4_ini_file_path = get_user_p4_config_file_path()
+    p4_ini_file = pathlib.Path(p4_ini_file_path)
+    if p4_ini_file.exists():
+        os.remove(p4_ini_file_path)
+    # Delete the user p4 group config file
+    p4_group_ini_file_path = get_user_p4_group_config_file_path()
+    p4_group_ini_file = pathlib.Path(p4_group_ini_file_path)
+    if p4_group_ini_file.exists():
+        os.remove(p4_group_ini_file_path)
+    # Delete the group info file
+    group_info_file_path = get_group_info_file_path()
+    group_info_file = pathlib.Path(group_info_file_path)
+    if group_info_file.exists():
+        os.remove(group_info_file_path)
+    # Delete the group members info file
+    group_members_info_file_path = get_group_members_info_file_path()
+    group_members_info_file = pathlib.Path(group_members_info_file_path)
+    if group_members_info_file.exists():
+        os.remove(group_members_info_file_path)
+    # Delete the key file
+    delete_key()

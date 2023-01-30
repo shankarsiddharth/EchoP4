@@ -9,6 +9,7 @@ import custom_logging as c_logging
 from echo_p4_ui_logger import EchoP4UILogger
 import echo_p4_constants as ep4c
 import p4_tools_helper as p4th
+from app_error import AppError
 
 
 class EchoP4Logger(object):
@@ -42,10 +43,9 @@ class EchoP4Logger(object):
             print("Creating log folder: " + self.log_folder_path)
             try:
                 os.makedirs(self.log_folder_path)
-            except OSError:
-                print("Creation of the log folder %s failed" % self.log_folder_path)
-                input("Press any key to exit...")
-                sys.exit(1)
+            except OSError as e:
+                exception_message = ("Creation of the log folder %s failed" % self.log_folder_path) + str(e)
+                raise AppError(exception_message)
 
         print("Log Folder exists.")
         self.log_file_path = os.path.join(self.log_folder_path, ep4c.LOG_FILE_NAME)
@@ -54,8 +54,8 @@ class EchoP4Logger(object):
 
         self.log_file = pathlib.Path(self.log_file_path)
         self.backup_log_file = pathlib.Path(self.backup_log_file_path)
-        maximum_log_file_size_in_MBs = 10  # 10 MB
-        maximum_log_file_size_in_bytes = maximum_log_file_size_in_MBs * 1024 * 1024  # MBs to bytes
+        maximum_log_file_size_in_megabytes = 10  # 10 MB
+        maximum_log_file_size_in_bytes = maximum_log_file_size_in_megabytes * 1024 * 1024  # MBs to bytes
 
         self.logger_instance = logging.getLogger('Echo P4 Log')
         self.logger_instance.setLevel(1)  # to send all records to log
@@ -94,14 +94,14 @@ class EchoP4Logger(object):
         self.logger_instance.addHandler(file_handler)
 
         # Test Logs
-        self.logger_instance.log(1, '======================================== Echo P4 LOGGER STARTED ========================================')
+        # self.logger_instance.log(1, '======================================== Echo P4 LOGGER STARTED ========================================')
         self.logger_instance.debug('======================================== Echo P4 LOGGER STARTED ========================================')
-        self.logger_instance.debug('Test Debug')
-        self.logger_instance.info('Test Info')
-        self.logger_instance.log(c_logging.log_level_success, 'Test Success')
-        self.logger_instance.warning('Test Warning')
-        self.logger_instance.error('Test Error')
-        self.logger_instance.critical('Test Critical')
+        # self.logger_instance.debug('Test Debug')
+        # self.logger_instance.info('Test Info')
+        # self.logger_instance.log(c_logging.log_level_success, 'Test Success')
+        # self.logger_instance.warning('Test Warning')
+        # self.logger_instance.error('Test Error')
+        # self.logger_instance.critical('Test Critical')
 
         self.ui_logger = None
         self.log_level = 0

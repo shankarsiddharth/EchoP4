@@ -1,20 +1,21 @@
-import os
-import sys
-import shutil
 import configparser
+import os
 import pathlib
+import shutil
 
-import p4_tools_helper as p4th
 import echo_p4_constants as ep4c
+import p4_tools_helper as p4th
+from app_error import AppError
 from echo_p4_logger import EchoP4Logger
 
 
 class EchoP4Config(object):
 
     def __init__(self):
-
         self.log = EchoP4Logger()
+        return
 
+    def create_new_config_file(self):
         root_folder = p4th.get_root_folder()
 
         # Initialize the paths
@@ -52,37 +53,32 @@ class EchoP4Config(object):
         # Check for the default echo p4 config files
         default_echo_p4_ini_file = pathlib.Path(default_echo_p4_ini_file_path)
         if not default_echo_p4_ini_file.exists():
-            self.log.error("Default echo p4 config file does not exist.")
-            input("Press any key to exit...")
-            sys.exit(1)
+            exception_message = "Default echo p4 config file does not exist."
+            raise AppError(exception_message)
 
         # Check for the default p4 config files
         default_p4_ini_file = pathlib.Path(default_p4_ini_file_path)
         if not default_p4_ini_file.exists():
-            self.log.error("Default p4 config file does not exist.")
-            input("Press any key to exit...")
-            sys.exit(1)
+            exception_message = "Default p4 config file does not exist."
+            raise AppError(exception_message)
 
         # Check for the default p4 group config files
         default_p4_group_ini_file = pathlib.Path(default_p4_group_ini_file_path)
         if not default_p4_group_ini_file.exists():
-            self.log.error("Default p4 group config file does not exist.")
-            input("Press any key to exit...")
-            sys.exit(1)
+            exception_message = "Default p4 group config file does not exist."
+            raise AppError(exception_message)
 
         # Check for the default DearPyGUI config files
         default_dpg_ini_file = pathlib.Path(default_dpg_ini_file_path)
         if not default_dpg_ini_file.exists():
-            self.log.error("Default DearPyGUI config file does not exist.")
-            input("Press any key to exit...")
-            sys.exit(1)
+            exception_message = "Default DearPyGUI config file does not exist."
+            raise AppError(exception_message)
 
         # Check for the Default P4 Custom Tool XML file
         default_p4_custom_tools_xml_file = pathlib.Path(default_p4_custom_tools_xml_file_path)
         if not default_p4_custom_tools_xml_file.exists():
-            self.log.error("Default P4 Custom Tools XML file does not exist.")
-            input("Press any key to exit...")
-            sys.exit(1)
+            exception_message = "Default P4 Custom Tools XML file does not exist."
+            raise AppError(exception_message)
 
         # Process Echo P4 config file
         self.log.info("Reading default echo p4 config file...")
@@ -91,7 +87,6 @@ class EchoP4Config(object):
 
         self.log.info("Populating values for key from default echo p4 config file...")
         echo_p4_user_config[ep4c.ECHO_P4_CONFIG_SECTION] = {}
-        # echo_p4_user_config[ep4c.ECHO_P4_CONFIG_SECTION][ep4c.KEY_P4TOOLS_FOLDER_PATH] = str(p4tools_root_folder)
         echo_p4_user_config[ep4c.ECHO_P4_CONFIG_SECTION][ep4c.KEY_BINARY_FOLDER_PATH] = str(binary_folder_path)
         echo_p4_user_config[ep4c.ECHO_P4_CONFIG_SECTION][ep4c.KEY_CONFIG_FOLDER_PATH] = str(config_folder_path)
         echo_p4_user_config[ep4c.ECHO_P4_CONFIG_SECTION][ep4c.KEY_CONFIG_DEFAULTS_FOLDER_PATH] = str(config_defaults_folder_path)
@@ -153,9 +148,8 @@ class EchoP4Config(object):
         with open(default_p4_custom_tools_xml_file_path, 'r', encoding='UTF-8') as default_xml_file:
             default_xml_file_lines = default_xml_file.readlines()
         if len(default_xml_file_lines) == 0:
-            self.log.error("P4 Custom Tools XML file is empty.")
-            input("Press any key to exit...")
-            sys.exit(1)
+            exception_message = "P4 Custom Tools XML file is empty."
+            raise AppError(exception_message)
         line_number = 0
         for line in default_xml_file_lines:
             if str(line.strip()).startswith("<InitDir>"):

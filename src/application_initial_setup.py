@@ -1,6 +1,7 @@
 import sys
 
 import p4_tools_helper as p4th
+from app_error import AppError
 from app_globals import log
 from echo_p4_config import EchoP4Config
 from p4_config import P4Config
@@ -30,7 +31,7 @@ class ApplicationInitialSetup(object):
         if self.user_echo_p4_config_data is None:
             log.info("No application config file found.")
             log.info("Trying to create a new config file for the current user...")
-            self.user_echo_p4_config = EchoP4Config()
+            self.user_echo_p4_config.create_new_config_file()
             self.user_echo_p4_config_data = p4th.get_user_echo_p4_config_data()
             log.info("New application config file created for the current user.")
         else:
@@ -68,9 +69,9 @@ class ApplicationInitialSetup(object):
             self.user_p4_group_info_config = P4GroupInfoConfig(self.user_echo_p4_config_data, self.user_p4_config_data)
             if self.user_p4_group_info_config.is_login_success():
                 if self.user_p4_group_info_config.is_group_list_empty():
-                    log.error("No groups found in the P4 server.")
-                    log.error("Please create a group for the current user in the P4 server and then try again.")
-                    sys.exit(0)
+                    exception_message = "No groups found in the P4 server."
+                    exception_message += "\nPlease create a group for the current user in the P4 server and then try again."
+                    raise AppError(exception_message)
             else:
                 log.info("P4 login failed with the saved credentials.")
                 log.info("Resetting the P4 Config file...")
@@ -81,6 +82,8 @@ class ApplicationInitialSetup(object):
             log.info("New P4 Group config file created for the current user.")
         else:
             log.info("P4 Group Config file found.")
+            group_name = self.user_p4_group_info_config.get_group_name(self.user_p4_group_config_data)
+            log.info("Group Name : %s", group_name)
 
     def check_group_member_data(self):
         if not (p4th.is_group_info_present() and p4th.is_group_members_info_present()):
@@ -90,5 +93,5 @@ class ApplicationInitialSetup(object):
             self.user_p4_group_config_data = p4th.get_user_p4_group_config_data()
             log.info("Trying to create a new P4 Group config file for the current user...")
             self.check_user_p4_group_config()
-            pass
+        log.info("Group info and Group members info found.")
         pass

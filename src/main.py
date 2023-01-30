@@ -1,24 +1,15 @@
-import os
-import sys
 import shutil
+import sys
 import threading
 
-from P4 import P4, P4Exception
-
-import dearpygui.demo as demo
 import dearpygui.dearpygui as dpg
 from dearpygui_ext import themes
 
 import echo_p4_constants
-import echo_p4_logger as ep4l
-import p4_tools_helper as p4th
-from p4_config import P4Config
-from echo_p4_config import EchoP4Config
-from app_globals import log
-from p4_group_info_config import P4GroupInfoConfig
-from application_initial_setup import ApplicationInitialSetup
-from app_exit import AppExit
 from app_error import AppError
+from app_exit import AppExit
+from app_globals import log
+from application_initial_setup import ApplicationInitialSetup
 
 # Constants
 is_load_default_layout_clicked = False
@@ -142,7 +133,7 @@ if __name__ == "__main__":
     try:
         ApplicationInitialSetup()
     except AppExit as e:
-        log.info("Application is exiting...")
+        log.info("Application Exited by User.")
         sys.exit(0)
     except AppError as e:
         log.error(str(e))

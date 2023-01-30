@@ -52,7 +52,14 @@ class P4GroupInfoConfigController(object):
                 result['groups_found'] = True
             p4.disconnect()
         except P4Exception as e:
-            log.error(e)
+            if "connect" in str(e).lower():
+                result['message'] = 'Unable to connect to the server. \nPlease check the network/internet connection and the server port and try again.'
+            if "run" in str(e).lower():
+                result['message'] = 'Unable to login to the server. \nPlease check the user credentials and try again.'
+            log.error(str(e))
+        except BaseException as e:
+            result['message'] = 'Exception occurred while trying to login to the server.'
+            log.error(str(e))
         finally:
             if p4.connected():
                 p4.disconnect()
@@ -78,9 +85,10 @@ class P4GroupInfoConfigController(object):
             log.info("Creating data folder: " + data_folder_path)
             try:
                 os.makedirs(data_folder_path)
-            except OSError:
-                log.info("Creation of the data folder failed.")
-                sys.exit(1)
+            except OSError as e:
+                exception_message = "Creation of the data folder failed."
+                exception_message += "\n" + str(e)
+                raise AppError(exception_message)
         log.info("Data folder exists.")
 
         p4 = P4()
@@ -125,9 +133,16 @@ class P4GroupInfoConfigController(object):
 
             p4.disconnect()
         except P4Exception as e:
-            log.error(e)
+            if "connect" in str(e).lower():
+                result['message'] = 'Unable to connect to the server. \nPlease check the network/internet connection and the server port and try again.'
+            if "run" in str(e).lower():
+                result['message'] = 'Unable to login to the server. \nPlease check the user credentials and try again.'
+            log.error(str(e))
         except AppError as e:
-            log.error(e)
+            raise e
+        except BaseException as e:
+            result['message'] = 'Exception occurred while trying to login to the server.'
+            log.error(str(e))
         finally:
             if p4.connected():
                 p4.disconnect()
@@ -302,11 +317,9 @@ class P4GroupInfoUI(threading.Thread):
     def __enter_clicked__(self, sender, data):
         dpg.configure_item(self.key_enter_handler_registry_tag, show=False)
         dpg.configure_item(self.key_navigate_handler_registry_tag, show=False)
-        print("Enter clicked")
         self.__select_group_project_clicked__(None, None)
 
     def __up_clicked__(self, sender, data):
-        group_list_length = len(self.p4_group_list)
         current_selected_group = dpg.get_value(self.group_list_tag)
         current_selected_group_index = self.p4_group_list.index(current_selected_group)
         if current_selected_group_index == 0:
@@ -320,7 +333,6 @@ class P4GroupInfoUI(threading.Thread):
         else:
             dpg.configure_item(self.key_enter_handler_registry_tag, show=True)
             dpg.configure_item(self.select_group_button_tag, show=True)
-        print("Up clicked")
 
     def __down_clicked__(self, sender, data):
         group_list_length = len(self.p4_group_list)
@@ -337,7 +349,6 @@ class P4GroupInfoUI(threading.Thread):
         else:
             dpg.configure_item(self.key_enter_handler_registry_tag, show=True)
             dpg.configure_item(self.select_group_button_tag, show=True)
-        print("Down clicked")
 
     def __init_ui__(self):
         dpg.create_context()
@@ -416,6 +427,7 @@ class P4GroupInfoConfig(object):
         self.port = None
         self.workspace = None
         self.is_login_successful = False
+        self.group_name = ""
         self.p4_group_list = self.get_group_list(self.user_p4_config_data)
         self.is_empty_group_list = False
         if len(self.p4_group_list) == 0:
@@ -456,6 +468,13 @@ class P4GroupInfoConfig(object):
         log.info(result['groups'])
         return result['groups']
 
+    def get_group_name(self, user_p4_group_config_data=None):
+        try:
+            self.group_name = user_p4_group_config_data[ep4c.P4_GROUP_CONFIG_SECTION][ep4c.KEY_P4GROUP]
+        except BaseException as e:
+            raise AppError("No group name found in the P4 Group Config file.", True)
+        return self.group_name
+
     def close_ui(self):
         if self.p4_group_config_ui is None:
             return
@@ -473,5 +492,5 @@ class P4GroupInfoConfig(object):
             log.info("Successfully deleted the P4 Group Config file : " + self.p4_group_ini_file_path)
             return True
         except OSError as e:
-            log.error("Error while deleting P4 Group Config file : " + str(e))
-            sys.exit(0)
+            exception_message = "Error while deleting P4 Group Config file : " + str(e)
+            raise AppError(exception_message)
