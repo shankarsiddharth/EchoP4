@@ -7,6 +7,9 @@ from cryptography.fernet import Fernet
 
 import echo_p4_constants as ep4c
 
+KEY_FOLDER_NAME = ".ep4dpg"
+KEY_FILE_NAME = "ep4.key"
+
 
 def get_root_folder():
     bin_src_folder = os.path.dirname(os.path.realpath(__file__))
@@ -93,14 +96,41 @@ def is_group_members_info_present():
     return True
 
 
-# TODO: Key should be stored in a secure location, not in the code
-# Generate a key and store it in a file when the application login is successful which is not in the code
-# Generated key should be unique for each user
-# Delete the key file when the user login fails
+def generate_key():
+    key = Fernet.generate_key()
+    home_folder = pathlib.Path.home()
+    app_folder = os.path.join(home_folder, KEY_FOLDER_NAME)
+    key_file_path = os.path.join(app_folder, KEY_FILE_NAME)
+    pathlib.Path(app_folder).mkdir(parents=True, exist_ok=True)
+    with open(key_file_path, 'wb') as key_file:
+        key_file.write(key)
+    return key
+
+
+def get_key():
+    home_folder = pathlib.Path.home()
+    app_folder = os.path.join(home_folder, KEY_FOLDER_NAME)
+    key_file_path = os.path.join(app_folder, KEY_FILE_NAME)
+    key_file = pathlib.Path(key_file_path)
+    if not key_file.exists():
+        return None
+    with open(key_file_path, 'rb') as key_file:
+        key = key_file.read()
+    return key
+
+
+def delete_key():
+    home_folder = pathlib.Path.home()
+    app_folder = os.path.join(home_folder, KEY_FOLDER_NAME)
+    key_file_path = os.path.join(app_folder, KEY_FILE_NAME)
+    key_file = pathlib.Path(key_file_path)
+    if not key_file.exists():
+        return
+    key_file.unlink()
+
+
 def encrypt_password(plain_text_password):
-    key = 'mt1ae3whDt_f0VPNW1A2Tdg_UO7mZnqHwhFCFoQicGE='.encode('utf-8')
-    # key = Fernet.generate_key()
-    print("key: " + key.decode('utf-8'))
+    key = generate_key()
     fernet = Fernet(key)
     encrypted_password_bytes = fernet.encrypt(plain_text_password.encode())
     encrypted_password = encrypted_password_bytes.decode('utf-8')
@@ -108,12 +138,14 @@ def encrypt_password(plain_text_password):
 
 
 def decrypt_password(encrypted_password):
-    key = 'mt1ae3whDt_f0VPNW1A2Tdg_UO7mZnqHwhFCFoQicGE='.encode('utf-8')
-    # key = Fernet.generate_key()
-    fernet = Fernet(key)
     decrypted_password = ''
+    key = get_key()
+    if key is None:
+        return decrypted_password
     try:
+        fernet = Fernet(key)
         decrypted_password = fernet.decrypt(encrypted_password.encode()).decode()
     except Exception as e:
-        print("Unexpected error:", e)
+        delete_key()
+        # print("Unexpected error:", e)
     return decrypted_password
