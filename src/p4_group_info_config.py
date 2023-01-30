@@ -134,16 +134,49 @@ class P4GroupInfoConfigController(object):
                 p4.disconnect()
             return result
 
+    @staticmethod
+    def try_initializing_p4_group_config(echo_p4_config, group_name):
+        result = dict()
+        result['success'] = False
+        result['message'] = 'Error occurred while initializing the P4 Group Config file.'
+        default_p4_group_config_file_path = echo_p4_config[ep4c.ECHO_P4_CONFIG_SECTION][ep4c.KEY_DEFAULT_P4_GROUP_INI_FILE_PATH]
+        p4_group_config_file_path = echo_p4_config[ep4c.ECHO_P4_CONFIG_SECTION][ep4c.KEY_P4_GROUP_INI_FILE_PATH]
+        log.info("Checking for P4 Group Config file...")
+        p4_group_config_file = pathlib.Path(p4_group_config_file_path)
+        if p4_group_config_file.exists():
+            log.info('P4 Group Config file already exists: ' + p4_group_config_file_path)
+            log.info('Removing the existing P4 Group Config file: ' + p4_group_config_file_path)
+            os.remove(p4_group_config_file_path)
+        default_p4_group_config_file = pathlib.Path(default_p4_group_config_file_path)
+        log.info("Checking for default P4 Group Config file...")
+        if not default_p4_group_config_file.exists():
+            log.error('Default P4 Group Config file does not exist: ' + default_p4_group_config_file_path)
+            return result
+        log.info("Default P4 Group Config file found.")
+        log.info("Reading default P4 Group Config file...")
+        user_p4_group_config = configparser.ConfigParser()
+        user_p4_group_config.read(default_p4_group_config_file_path)
+        user_p4_group_config[ep4c.P4_GROUP_CONFIG_SECTION][ep4c.KEY_P4GROUP] = group_name
+        log.info("Writing user P4 Group Config file... %s", p4_group_config_file_path)
+        with open(p4_group_config_file_path, 'w', encoding='UTF-8') as user_p4_group_config_file:
+            user_p4_group_config.write(user_p4_group_config_file)
+        log.info("User's P4 Group Config file written.")
+        result['success'] = True
+        result['message'] = 'User P4 Group Config file initialized successfully.'
+        return result
+
 
 class P4GroupInfoUI(object):
     __minimum_width__ = 700
     __minimum_height__ = 500
 
-    def __init__(self, user_p4_config_data=None, p4_group_list=None, p4_group_config_controller=None, user=None, password=None, port=None, viewport_width=__minimum_width__,
-                 viewport_height=__minimum_height__):
-        if p4_group_config_controller is None or user_p4_config_data is None or p4_group_list is None or user is None or password is None or port is None:
+    def __init__(self, user_echo_p4_config_data=None, user_p4_config_data=None, p4_group_list=None, p4_group_config_controller=None, user=None, password=None, port=None,
+                 viewport_width=__minimum_width__, viewport_height=__minimum_height__):
+        if p4_group_config_controller is None or user_echo_p4_config_data is None or user_p4_config_data is None or p4_group_list is None or user is None or password is None \
+                or port is None:
             log.error("Invalid arguments passed to the GroupConfigUI constructor.")
             sys.exit(1)
+        self.user_echo_p4_config_data = user_echo_p4_config_data
         self.user_p4_config_data = user_p4_config_data
         self.p4_group_list = p4_group_list
         self.p4_group_config_controller: P4GroupInfoConfigController = p4_group_config_controller
@@ -173,17 +206,14 @@ class P4GroupInfoUI(object):
         self.group_list_tag = "Group/Project"
         self.simple_log_tag = "Log"
         self.select_group_button_tag = "Select Group/Project"
+        self.key_navigate_handler_registry_tag = "Key Navigate Handler Registry"
+        self.key_enter_handler_registry_tag = "Key Enter Handler Registry"
+        self.enter_key_press_handler_tag = "Enter Key Press Handler"
         self.log_width = viewport_width - 50
         self.log_height = viewport_height - 350
         self.auto_close_ui = False
         self.user_close_ui = False
         self.__init_ui__()
-
-    def get_viewport_name(self):
-        return self.viewport_title
-
-    def get_window_name(self):
-        return self.window_title
 
     def close_ui(self):
         self.auto_close_ui = True
@@ -203,13 +233,31 @@ class P4GroupInfoUI(object):
     def __select_group_project_clicked__(self, sender, data):
         selected_group = dpg.get_value(self.group_list_tag)
 
+        if selected_group is None or selected_group == "" or selected_group == "None":
+            dpg.set_value(self.simple_log_tag, "Please select a group.")
+            return
+
         log_text = "Fetching Group Members data from Perforce..."
         dpg.set_value(self.simple_log_tag, log_text)
         log.info(log_text)
 
         result = self.p4_group_config_controller.generate_group_member_data(selected_group, self.user, self.password, self.port)
 
+        dpg.configure_item(self.key_enter_handler_registry_tag, show=True)
+        dpg.configure_item(self.key_navigate_handler_registry_tag, show=True)
+
         if not result['group_data_generated']:
+            dpg.set_value(self.simple_log_tag, result['message'])
+            log.error(result['message'])
+            dpg.configure_item(self.select_group_button_tag, enabled=True, show=True)
+            return
+
+        log_text = "Group Members data generated successfully."
+        dpg.set_value(self.simple_log_tag, log_text)
+        log.info(log_text)
+
+        result = self.p4_group_config_controller.try_initializing_p4_group_config(self.user_echo_p4_config_data, selected_group)
+        if not result['success']:
             dpg.set_value(self.simple_log_tag, result['message'])
             log.error(result['message'])
             dpg.configure_item(self.select_group_button_tag, enabled=True, show=True)
@@ -222,6 +270,46 @@ class P4GroupInfoUI(object):
             log.info("User Closed the GroupConfigUI.")
             self.user_close_ui = True
 
+    def __enter_clicked__(self, sender, data):
+        dpg.configure_item(self.key_enter_handler_registry_tag, show=False)
+        dpg.configure_item(self.key_navigate_handler_registry_tag, show=False)
+        print("Enter clicked")
+        self.__select_group_project_clicked__(None, None)
+
+    def __up_clicked__(self, sender, data):
+        group_list_length = len(self.p4_group_list)
+        current_selected_group = dpg.get_value(self.group_list_tag)
+        current_selected_group_index = self.p4_group_list.index(current_selected_group)
+        if current_selected_group_index == 0:
+            return  # Already at the top
+        new_selected_group_index = current_selected_group_index - 1
+        new_selected_group = self.p4_group_list[new_selected_group_index]
+        dpg.set_value(self.group_list_tag, new_selected_group)
+        if new_selected_group == "None":
+            dpg.configure_item(self.key_enter_handler_registry_tag, show=False)
+            dpg.configure_item(self.select_group_button_tag, show=False)
+        else:
+            dpg.configure_item(self.key_enter_handler_registry_tag, show=True)
+            dpg.configure_item(self.select_group_button_tag, show=True)
+        print("Up clicked")
+
+    def __down_clicked__(self, sender, data):
+        group_list_length = len(self.p4_group_list)
+        current_selected_group = dpg.get_value(self.group_list_tag)
+        current_selected_group_index = self.p4_group_list.index(current_selected_group)
+        if current_selected_group_index == group_list_length - 1:
+            return  # Already at the bottom
+        new_selected_group_index = current_selected_group_index + 1
+        new_selected_group = self.p4_group_list[new_selected_group_index]
+        dpg.set_value(self.group_list_tag, new_selected_group)
+        if new_selected_group == "None":
+            dpg.configure_item(self.key_enter_handler_registry_tag, show=False)
+            dpg.configure_item(self.select_group_button_tag, show=False)
+        else:
+            dpg.configure_item(self.key_enter_handler_registry_tag, show=True)
+            dpg.configure_item(self.select_group_button_tag, show=True)
+        print("Down clicked")
+
     def __init_ui__(self):
         dpg.create_context()
 
@@ -233,6 +321,13 @@ class P4GroupInfoUI(object):
         dpg.create_viewport(title=self.viewport_title, width=self.VIEWPORT_WIDTH, height=self.VIEWPORT_HEIGHT)
 
         dpg.set_exit_callback(callback=self.__exit_callback__)
+
+        with dpg.handler_registry(tag=self.key_navigate_handler_registry_tag):
+            dpg.add_key_press_handler(key=dpg.mvKey_Up, callback=self.__up_clicked__)
+            dpg.add_key_press_handler(key=dpg.mvKey_Down, callback=self.__down_clicked__)
+
+        with dpg.handler_registry(tag=self.key_enter_handler_registry_tag, show=False):
+            dpg.add_key_press_handler(tag=self.enter_key_press_handler_tag, key=dpg.mvKey_Return, callback=self.__enter_clicked__)
 
         with dpg.window(label=self.window_title, tag=self.window_title, no_title_bar=False, no_close=True):
             dpg.add_spacer(height=25)
@@ -270,27 +365,33 @@ class P4GroupInfoUI(object):
 
 class P4GroupInfoConfig(object):
 
-    def init_and_render_ui(self, user_p4_config_data, p4_group_list):
-        self.p4_group_config_ui = P4GroupInfoUI(user_p4_config_data=user_p4_config_data, p4_group_list=p4_group_list, p4_group_config_controller=self.p4_group_config_controller,
+    def init_and_render_ui(self, p4_group_list):
+        self.p4_group_config_ui = P4GroupInfoUI(user_echo_p4_config_data=self.user_echo_p4_config_data, user_p4_config_data=self.user_p4_config_data, p4_group_list=p4_group_list,
+                                                p4_group_config_controller=self.p4_group_config_controller,
                                                 user=self.user, password=self.password, port=self.port)
         pass
 
     def __init__(self, user_echo_p4_config_data=None, user_p4_config_data=None):
+        if user_echo_p4_config_data is None or user_p4_config_data is None:
+            return
         self.user_echo_p4_config_data = user_echo_p4_config_data
         self.user_p4_config_data = user_p4_config_data
         self.p4_group_config_controller = P4GroupInfoConfigController()
+        self.p4_group_ini_file = None
+        self.p4_group_ini_file_path = None
         self.user = None
         self.password = None
         self.port = None
         self.workspace = None
+        self.is_login_successful = False
         self.p4_group_list = self.get_group_list(self.user_p4_config_data)
-        self.empty_group_list = False
+        self.is_empty_group_list = False
         if len(self.p4_group_list) == 0:
-            self.empty_group_list = True
+            self.is_empty_group_list = True
             return
         self.p4_group_config_ui = None
 
-        dpg_thread = threading.Thread(target=self.init_and_render_ui, args=[self.user_p4_config_data, self.p4_group_list])
+        dpg_thread = threading.Thread(target=self.init_and_render_ui, args=[self.p4_group_list])
         dpg_thread.start()
         dpg_thread.join()
 
@@ -299,7 +400,10 @@ class P4GroupInfoConfig(object):
                 sys.exit(0)
 
     def is_group_list_empty(self):
-        return self.empty_group_list
+        return self.is_empty_group_list
+
+    def is_login_success(self):
+        return self.is_login_successful
 
     def get_group_list(self, user_p4_config=None) -> list:
         if user_p4_config is None:
@@ -312,6 +416,9 @@ class P4GroupInfoConfig(object):
 
         result = self.p4_group_config_controller.get_group_list(self.user, self.password, self.port)
 
+        if result['login_success'] is True:
+            self.is_login_successful = True
+
         if not result['groups_found']:
             log.error(result['message'])
             return []
@@ -319,36 +426,22 @@ class P4GroupInfoConfig(object):
         log.info(result['groups'])
         return result['groups']
 
-    def p4_login(self, user_p4_config_data=None):
-        if user_p4_config_data is None:
-            return False
-        result = self.p4_group_config_controller.p4_login(user_p4_config_data=user_p4_config_data)
-        if not result['login_success']:
-            log.error(result['message'])
-            return False
-
-        if not result['workspace_found']:
-            log.error(result['message'])
-            return False
-
-        return True
-
-    def delete_user_p4_config_file(self):
-        self.p4_ini_file_path = p4th.get_user_p4_config_file_path()
-        self.p4_ini_file = pathlib.Path(self.p4_ini_file_path)
-        if not self.p4_ini_file.exists():
-            return True
-
-        try:
-            log.info("Trying to delete the P4 Config file : " + self.p4_ini_file_path)
-            os.remove(self.p4_ini_file_path)
-            log.info("Successfully deleted the P4 Config file : " + self.p4_ini_file_path)
-            return True
-        except OSError as e:
-            log.error("Error while deleting P4 Config file : " + e)
-            sys.exit(0)
-
     def close_ui(self):
         if self.p4_group_config_ui is None:
             return
         self.p4_group_config_ui.close_ui()
+
+    def delete_user_p4_group_config_file(self):
+        self.p4_group_ini_file_path = p4th.get_user_p4_group_config_file_path()
+        self.p4_group_ini_file = pathlib.Path(self.p4_group_ini_file_path)
+        if not self.p4_group_ini_file.exists():
+            return True
+
+        try:
+            log.info("Trying to delete the P4 Group Config file : " + self.p4_group_ini_file_path)
+            os.remove(self.p4_group_ini_file_path)
+            log.info("Successfully deleted the P4 Group Config file : " + self.p4_group_ini_file_path)
+            return True
+        except OSError as e:
+            log.error("Error while deleting P4 Group Config file : " + str(e))
+            sys.exit(0)

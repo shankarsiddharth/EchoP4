@@ -40,7 +40,8 @@ class EchoP4Config(object):
         default_p4_group_ini_file_path = os.path.join(config_defaults_folder_path, ep4c.DEFAULT_P4_GROUP_INI_FILE_NAME)
         p4_group_ini_file_path = os.path.join(config_folder_path, ep4c.P4_GROUP_INI_FILE_NAME)
 
-        team_members_json_file_path = os.path.join(data_folder_path, ep4c.GROUP_MEMBERS_INFO_JSON_FILE_NAME)
+        group_info_json_file_path = os.path.join(data_folder_path, ep4c.GROUP_INFO_JSON_FILE_NAME)
+        group_members_info_json_file_path = os.path.join(data_folder_path, ep4c.GROUP_MEMBERS_INFO_JSON_FILE_NAME)
 
         default_p4_custom_tools_xml_file_path = os.path.join(tools_default_folder_path, ep4c.DEFAULT_P4_CUSTOM_TOOLS_XML_FILE_NAME)
         p4_custom_tools_xml_file_path = os.path.join(tools_folder_path, ep4c.P4_CUSTOM_TOOLS_XML_FILE_NAME)
@@ -113,7 +114,8 @@ class EchoP4Config(object):
         echo_p4_user_config[ep4c.ECHO_P4_CONFIG_SECTION][ep4c.KEY_DEFAULT_P4_GROUP_INI_FILE_PATH] = str(default_p4_group_ini_file_path)
         echo_p4_user_config[ep4c.ECHO_P4_CONFIG_SECTION][ep4c.KEY_P4_GROUP_INI_FILE_PATH] = str(p4_group_ini_file_path)
 
-        echo_p4_user_config[ep4c.ECHO_P4_CONFIG_SECTION][ep4c.KEY_TEAM_MEMBERS_JSON_FILE_PATH] = str(team_members_json_file_path)
+        echo_p4_user_config[ep4c.ECHO_P4_CONFIG_SECTION][ep4c.KEY_GROUP_INFO_JSON_FILE_PATH] = str(group_info_json_file_path)
+        echo_p4_user_config[ep4c.ECHO_P4_CONFIG_SECTION][ep4c.KEY_GROUP_MEMBERS_INFO_JSON_FILE_PATH] = str(group_members_info_json_file_path)
 
         echo_p4_user_config[ep4c.ECHO_P4_CONFIG_SECTION][ep4c.KEY_DEFAULT_P4_CUSTOM_TOOLS_XML_FILE_PATH] = str(default_p4_custom_tools_xml_file_path)
         echo_p4_user_config[ep4c.ECHO_P4_CONFIG_SECTION][ep4c.KEY_P4_CUSTOM_TOOLS_XML_FILE_PATH] = str(p4_custom_tools_xml_file_path)

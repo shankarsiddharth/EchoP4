@@ -28,6 +28,20 @@ def get_user_p4_group_config_file_path():
     return p4_group_ini_file_path
 
 
+def get_group_info_file_path():
+    root_folder = get_root_folder()
+    data_folder_path = os.path.join(root_folder, ep4c.DATA_FOLDER_NAME)
+    group_info_file_path = os.path.join(data_folder_path, ep4c.GROUP_INFO_JSON_FILE_NAME)
+    return group_info_file_path
+
+
+def get_group_members_info_file_path():
+    root_folder = get_root_folder()
+    data_folder_path = os.path.join(root_folder, ep4c.DATA_FOLDER_NAME)
+    group_members_info_file_path = os.path.join(data_folder_path, ep4c.GROUP_MEMBERS_INFO_JSON_FILE_NAME)
+    return group_members_info_file_path
+
+
 def get_user_echo_p4_config_data():
     root_folder = get_root_folder()
     config_folder_path = os.path.join(root_folder, ep4c.CONFIG_FOLDER_NAME)
@@ -61,6 +75,22 @@ def get_user_p4_group_config_data():
     p4_group_config = configparser.ConfigParser()
     p4_group_config.read(p4_group_ini_file_path)
     return p4_group_config
+
+
+def is_group_info_present():
+    group_info_file_path = get_group_info_file_path()
+    group_info_file = pathlib.Path(group_info_file_path)
+    if not group_info_file.exists():
+        return False
+    return True
+
+
+def is_group_members_info_present():
+    group_members_info_file_path = get_group_members_info_file_path()
+    group_members_info_file = pathlib.Path(group_members_info_file_path)
+    if not group_members_info_file.exists():
+        return False
+    return True
 
 
 # TODO: Key should be stored in a secure location, not in the code
