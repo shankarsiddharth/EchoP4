@@ -4,6 +4,7 @@ import pathlib
 import sys
 import threading
 import json
+import traceback
 
 import dearpygui.dearpygui as dpg
 from P4 import P4, P4Exception
@@ -52,14 +53,14 @@ class P4GroupInfoConfigController(object):
                 result['groups_found'] = True
             p4.disconnect()
         except P4Exception as e:
+            log.exception(e)
             if "connect" in str(e).lower():
                 result['message'] = 'Unable to connect to the server. \nPlease check the network/internet connection and the server port and try again.'
             if "run" in str(e).lower():
                 result['message'] = 'Unable to login to the server. \nPlease check the user credentials and try again.'
-            log.error(str(e))
         except BaseException as e:
+            log.exception(e)
             result['message'] = 'Exception occurred while trying to login to the server.'
-            log.error(str(e))
         finally:
             if p4.connected():
                 p4.disconnect()
@@ -86,8 +87,8 @@ class P4GroupInfoConfigController(object):
             try:
                 os.makedirs(data_folder_path)
             except OSError as e:
-                exception_message = "Creation of the data folder failed."
-                exception_message += "\n" + str(e)
+                log.exception(e)
+                exception_message = "Creation of the data folder failed." + str(e)
                 raise AppError(exception_message)
         log.info("Data folder exists.")
 
@@ -133,16 +134,17 @@ class P4GroupInfoConfigController(object):
 
             p4.disconnect()
         except P4Exception as e:
+            log.exception(e)
             if "connect" in str(e).lower():
                 result['message'] = 'Unable to connect to the server. \nPlease check the network/internet connection and the server port and try again.'
             if "run" in str(e).lower():
                 result['message'] = 'Unable to login to the server. \nPlease check the user credentials and try again.'
-            log.error(str(e))
         except AppError as e:
+            log.exception(e)
             raise e
         except BaseException as e:
+            log.exception(e)
             result['message'] = 'Exception occurred while trying to login to the server.'
-            log.error(str(e))
         finally:
             if p4.connected():
                 p4.disconnect()
@@ -411,7 +413,7 @@ class P4GroupInfoConfig(object):
         self.p4_group_config_ui.start()
         try:
             self.p4_group_config_ui.join()
-        except Exception as e:
+        except BaseException as e:
             raise e
 
     def __init__(self, user_echo_p4_config_data=None, user_p4_config_data=None):
@@ -472,6 +474,7 @@ class P4GroupInfoConfig(object):
         try:
             self.group_name = user_p4_group_config_data[ep4c.P4_GROUP_CONFIG_SECTION][ep4c.KEY_P4GROUP]
         except BaseException as e:
+            log.exception(e)
             raise AppError("No group name found in the P4 Group Config file.", True)
         return self.group_name
 
@@ -492,5 +495,6 @@ class P4GroupInfoConfig(object):
             log.info("Successfully deleted the P4 Group Config file : " + self.p4_group_ini_file_path)
             return True
         except OSError as e:
+            log.exception(e)
             exception_message = "Error while deleting P4 Group Config file : " + str(e)
             raise AppError(exception_message)

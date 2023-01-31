@@ -69,7 +69,8 @@ class AppErrorUI(object):
             p4th.reset_user_data()
             log.info("User data reset successfully.")
         except BaseException as e:
-            exception_message = f"An error occurred while trying to reset the user data. Error: {e}"
+            log.exception(e)
+            exception_message = f"An error occurred while trying to reset the user data. \nError: {e}"
             dpg.configure_item(self.error_message_text_tag, default_value=exception_message)
             return
         if exception_message == '':

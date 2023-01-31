@@ -181,7 +181,7 @@ class AppUtility(object):
                 if self.app_utility_ui.reset_user_data:
                     # raise AppError(self.app_utility_ui.exception_message, True)
                     raise AppMessage(self.app_utility_ui.exception_message, True)
-            except Exception as e:
+            except BaseException as e:
                 raise e
             finally:
                 if self.app_utility_controller.is_load_default_layout_clicked:

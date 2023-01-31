@@ -51,6 +51,9 @@ class AppMessageUI(object):
         self.auto_close_ui = True
 
     def __exit_callback__(self):
+        dpg.configure_item(self.close_button_tag, show=False)
+        dpg.configure_item(self.reset_data_button_tag, show=False)
+        log.info("User requested to close the Message Window.")
         if not self.auto_close_ui:
             self.user_close_ui = True
 
@@ -69,7 +72,8 @@ class AppMessageUI(object):
             p4th.reset_user_data()
             log.info("User data reset successfully.")
         except BaseException as e:
-            exception_message = f"An error occurred while trying to reset the user data. Error: {e}"
+            log.exception(e)
+            exception_message = f"An error occurred while trying to reset the user data. \n Error: {e}"
             dpg.configure_item(self.user_message_text_tag, default_value=exception_message)
             return
         if exception_message == '':
@@ -110,9 +114,9 @@ class AppMessageUI(object):
 
         with dpg.theme(tag=self.red_button_theme_tag):
             with dpg.theme_component(dpg.mvButton):
-                dpg.add_theme_color(dpg.mvThemeCol_Button, self._hsv_to_rgb(4.0/7.0, 0.6, 0.6))
-                dpg.add_theme_color(dpg.mvThemeCol_ButtonActive, self._hsv_to_rgb(4.0/7.0, 0.8, 0.8))
-                dpg.add_theme_color(dpg.mvThemeCol_ButtonHovered, self._hsv_to_rgb(4.0/7.0, 0.7, 0.7))
+                dpg.add_theme_color(dpg.mvThemeCol_Button, self._hsv_to_rgb(4.0 / 7.0, 0.6, 0.6))
+                dpg.add_theme_color(dpg.mvThemeCol_ButtonActive, self._hsv_to_rgb(4.0 / 7.0, 0.8, 0.8))
+                dpg.add_theme_color(dpg.mvThemeCol_ButtonHovered, self._hsv_to_rgb(4.0 / 7.0, 0.7, 0.7))
                 dpg.add_theme_style(dpg.mvStyleVar_FrameRounding, self.padding_value * 5)
                 dpg.add_theme_style(dpg.mvStyleVar_FramePadding, self.padding_value * 3, self.padding_value * 3)
 

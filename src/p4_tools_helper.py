@@ -150,7 +150,7 @@ def decrypt_password(encrypted_password):
     try:
         fernet = Fernet(key)
         decrypted_password = fernet.decrypt(encrypted_password.encode()).decode()
-    except Exception as e:
+    except BaseException as e:
         delete_key()
         # print("Unexpected error:", e)
     return decrypted_password
