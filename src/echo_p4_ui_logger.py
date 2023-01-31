@@ -125,6 +125,9 @@ class EchoP4UILogger:
         elif level == logging.CRITICAL:
             self.ui_message = "[CRITICAL]\t\t" + self.log_message
             theme = self.critical_theme
+        elif level == c_logging.log_level_exception:
+            self.ui_message = "[EXCEPTION]\t\t" + self.log_message
+            theme = self.critical_theme
 
         new_log = dpg.add_text(self.ui_message, parent=self.filter_id, filter_key=self.ui_message)
         dpg.bind_item_theme(new_log, theme)
@@ -152,6 +155,9 @@ class EchoP4UILogger:
 
     def critical(self, message, *args):
         self._log(logging.CRITICAL, message, *args)
+
+    def exception(self, message, *args):
+        self._log(c_logging.log_level_exception, message, *args)
 
     def clear_log(self):
         dpg.delete_item(self.filter_id, children_only=True)

@@ -3,6 +3,7 @@ import os
 import pathlib
 import sys
 import threading
+import traceback
 from logging.handlers import SocketHandler
 
 import custom_logging as c_logging
@@ -43,7 +44,8 @@ class EchoP4Logger(object):
             try:
                 os.makedirs(self.log_folder_path)
             except OSError as e:
-                exception_message = ("Creation of the log folder %s failed" % self.log_folder_path) + str(e)
+                traceback_string = traceback.format_exc()
+                exception_message = ("Creation of the log folder %s failed" % self.log_folder_path) + str(e) + "\n" + traceback_string
                 print(exception_message)
 
         print("Log Folder exists.")
@@ -200,6 +202,11 @@ class EchoP4Logger(object):
 
     def critical(self, message, *args: object):
         self._log(logging.CRITICAL, message, *args)
+
+    def exception(self, message, *args: object):
+        self.logger_instance.exception(message, *args)
+        if self.ui_logger is not None:
+            self.ui_logger.exception(message, *args)
 
     def clear_log(self):
         pass
