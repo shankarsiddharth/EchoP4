@@ -85,9 +85,11 @@ class AppUtilityUI(threading.Thread):
             raise self.exception
 
     def __exit_callback__(self):
+        log.info("User clicked on the Close Window button.")
         self.app_utility_controller.is_window_close_button_clicked = True
 
     def load_default_layout(self):
+        log.info("User clicked on the Load Default Layout button.")
         self.app_utility_controller.is_load_default_layout_clicked = True
 
     def reset_to_default_layout(self):
@@ -95,6 +97,7 @@ class AppUtilityUI(threading.Thread):
         p4th.reset_to_default_layout()
 
     def reset_user_data_callback(self):
+        log.info("User clicked on the Reset User Data button.")
         self.exception_message = 'Please, Confirm to reset user data.'
         self.app_utility_controller.is_window_close_button_clicked = True
         self.reset_user_data = True
