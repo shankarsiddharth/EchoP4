@@ -4,6 +4,7 @@ import pathlib
 import platform
 import sys
 import threading
+import shutil
 
 import dearpygui.dearpygui as dpg
 from P4 import P4, P4Exception
@@ -13,6 +14,7 @@ import echo_p4_constants as ep4c
 import p4_tools_helper as p4th
 from app_error import AppError
 from app_exit import AppExit
+from app_message import AppMessage
 from app_globals import log
 
 
@@ -21,6 +23,11 @@ class AppUtilityController(object):
     def __init__(self):
         self.exception_message = ''
         self.result = dict()
+
+        # Constants
+        self.is_load_default_layout_clicked = False
+        # is_menu_close_button_clicked = False
+        self.is_window_close_button_clicked = False
 
 
 class AppUtilityUI(threading.Thread):
@@ -45,12 +52,22 @@ class AppUtilityUI(threading.Thread):
             viewport_height = self.__minimum_height__
         self.VIEWPORT_WIDTH = viewport_width
         self.VIEWPORT_HEIGHT = viewport_height
-        self.viewport_title = "Echo P4 Tool UI"
-        self.window_title = "Echo P4 Tool UI Window"
-        self.auto_close_ui = False
+        self.viewport_title = "Echo P4 Tool"
+        self.command_window_title = "Echo P4 Commands"
         self.user_close_ui = False
         self.reset_user_data = False
         self.exception_message = ''
+        self.reset_user_data = False
+
+        self.file_menu: str = "File"
+        self.ui_menu: str = "UI"
+        self.data_menu: str = "Data"
+        self.save_current_layout_to_dpg_ini: str = "Save Current Layout"
+        self.reset_to_default_layout_tag: str = "Reset to Default Layout"
+        self.reset_user_data_tag: str = "Reset User Data"
+
+        self.default_dpg_ini_file_path = p4th.get_default_dpg_ini_file_path()
+        self.dpg_ini_file_path = p4th.get_dpg_ini_file_path()
 
     def run(self):
         try:
@@ -67,34 +84,69 @@ class AppUtilityUI(threading.Thread):
         if self.exception:
             raise self.exception
 
-    def close_ui(self):
-        self.auto_close_ui = True
-
     def __exit_callback__(self):
-        if not self.auto_close_ui:
-            log.info("User Closed the P4ConfigUI.")
-            self.user_close_ui = True
+        self.app_utility_controller.is_window_close_button_clicked = True
+
+    def load_default_layout(self):
+        self.app_utility_controller.is_load_default_layout_clicked = True
+
+    def reset_to_default_layout(self):
+        self.exception_message = ''
+        p4th.reset_to_default_layout()
+
+    def reset_user_data_callback(self):
+        self.exception_message = 'Please, Confirm to reset user data.'
+        self.app_utility_controller.is_window_close_button_clicked = True
+        self.reset_user_data = True
+        pass
+
+    def add_log(self):
+        log.debug("Button Clicked")
 
     def __init_ui__(self):
 
         dpg.create_context()
 
+        # demo.show_demo()
+
+        light_theme_id = themes.create_theme_imgui_light()
         dark_theme_id = themes.create_theme_imgui_dark()
         dpg.bind_theme(dark_theme_id)
 
-        dpg.configure_app(manual_callback_management=sys.flags.dev_mode)
+        dpg.configure_app(manual_callback_management=sys.flags.dev_mode, docking=True, docking_space=True, init_file="../config/" + ep4c.DPG_INI_FILE_NAME,
+                          load_init_file=True)
 
         dpg.create_viewport(title=self.viewport_title, width=self.VIEWPORT_WIDTH, height=self.VIEWPORT_HEIGHT)
 
         dpg.set_exit_callback(callback=self.__exit_callback__)
 
-        with dpg.window(label=self.window_title, tag=self.window_title, no_title_bar=False, no_close=True):
-            dpg.add_text("Server")
+        # Menu Bar
+        with dpg.viewport_menu_bar():
+            # File Menu
+            # with dpg.menu(label=self.file_menu, tag=self.file_menu):
+            #     dpg.add_menu_item(label=self.save_current_layout_to_dpg_ini, tag=self.save_current_layout_to_dpg_ini,
+            #                       callback=lambda: dpg.save_init_file(self.dpg_ini_file_path))
+            #     dpg.add_menu_item(label=self.reset_to_default_layout_tag, tag=self.reset_to_default_layout_tag, callback=self.load_default_layout)
+            # UI Menu
+            with dpg.menu(label=self.ui_menu, tag=self.ui_menu):
+                dpg.add_menu_item(label=self.save_current_layout_to_dpg_ini, tag=self.save_current_layout_to_dpg_ini,
+                                  callback=lambda: dpg.save_init_file(self.dpg_ini_file_path))
+                dpg.add_menu_item(label=self.reset_to_default_layout_tag, tag=self.reset_to_default_layout_tag, callback=self.load_default_layout)
+            # Data Menu
+            with dpg.menu(label=self.data_menu, tag=self.data_menu):
+                dpg.add_menu_item(label=self.reset_user_data_tag, tag=self.reset_user_data_tag, callback=self.reset_user_data_callback)
+
+        # Command Window
+        with dpg.window(label=self.command_window_title, tag=self.command_window_title, no_title_bar=False, no_close=True):
+            dpg.add_text("Hello, world")
+            dpg.add_button(label="Add Log", callback=self.add_log)
+            dpg.add_input_text(label="string", default_value="Quick brown fox")
+            dpg.add_slider_float(label="float", default_value=0.273, max_value=1)
+
+        log.init_ui()
 
         dpg.setup_dearpygui()
         dpg.show_viewport()
-
-        dpg.set_primary_window(self.window_title, True)
 
         # below replaces, start_dearpygui()
         while dpg.is_dearpygui_running():
@@ -103,26 +155,39 @@ class AppUtilityUI(threading.Thread):
                 jobs = dpg.get_callback_queue()  # retrieves and clears queue
                 dpg.run_callbacks(jobs)
 
+            # global is_load_default_layout_clicked
+            if self.app_utility_controller.is_load_default_layout_clicked or self.app_utility_controller.is_window_close_button_clicked:
+                dpg.stop_dearpygui()
+
             dpg.render_dearpygui_frame()
 
-            if self.auto_close_ui:
-                break
-
+        log.close_ui()
         dpg.destroy_context()
+
+        # global is_load_default_layout_clicked
+        if self.app_utility_controller.is_load_default_layout_clicked:
+            self.reset_to_default_layout()
 
 
 class AppUtility(object):
 
     def init_and_render_ui(self):
-        self.app_utility_ui = AppUtilityUI(self.app_utility_controller)
-        self.app_utility_ui.start()
-        try:
-            self.app_utility_ui.join()
-            # Provide the option to reset the user data if there is an error.
-            if self.app_utility_ui.reset_user_data:
-                raise AppError(self.app_utility_ui.exception_message, True)
-        except Exception as e:
-            raise e
+        while not self.app_utility_controller.is_window_close_button_clicked:
+            self.app_utility_ui = AppUtilityUI(self.app_utility_controller)
+            self.app_utility_ui.start()
+            try:
+                self.app_utility_ui.join()
+                # Provide the option to reset the user data if there is an error.
+                if self.app_utility_ui.reset_user_data:
+                    # raise AppError(self.app_utility_ui.exception_message, True)
+                    raise AppMessage(self.app_utility_ui.exception_message, True)
+            except Exception as e:
+                raise e
+            finally:
+                if self.app_utility_controller.is_load_default_layout_clicked:
+                    self.app_utility_controller.is_window_close_button_clicked = False
+                    self.app_utility_controller.is_load_default_layout_clicked = False
+                    continue
 
     def __init__(self):
         self.p4_ini_file = None
@@ -135,8 +200,3 @@ class AppUtility(object):
         if self.app_utility_ui is not None:
             if self.app_utility_ui.user_close_ui:
                 raise AppExit()
-
-    def close_ui(self):
-        if self.app_utility_ui is None:
-            return
-        self.app_utility_ui.close_ui()

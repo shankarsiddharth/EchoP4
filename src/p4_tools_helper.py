@@ -1,6 +1,7 @@
 import configparser
 import os
 import pathlib
+import shutil
 
 from cryptography.fernet import Fernet
 
@@ -183,3 +184,28 @@ def reset_user_data():
         os.remove(group_members_info_file_path)
     # Delete the key file
     delete_key()
+
+
+def get_dpg_ini_file_path():
+    user_echo_p4_config = get_user_echo_p4_config_data()
+    if user_echo_p4_config is None:
+        return ''
+    dpg_ini_file_path = user_echo_p4_config[ep4c.ECHO_P4_CONFIG_SECTION][ep4c.KEY_DPG_INI_FILE_PATH]
+    return dpg_ini_file_path
+
+
+def get_default_dpg_ini_file_path():
+    user_echo_p4_config = get_user_echo_p4_config_data()
+    if user_echo_p4_config is None:
+        return ''
+    default_dpg_ini_file_path = user_echo_p4_config[ep4c.ECHO_P4_CONFIG_SECTION][ep4c.KEY_DEFAULT_DPG_INI_FILE_PATH]
+    return default_dpg_ini_file_path
+
+
+def reset_to_default_layout():
+    dpg_ini_file_path = get_dpg_ini_file_path()
+    default_dpg_ini_file_path = get_default_dpg_ini_file_path()
+    dpg_ini_file = pathlib.Path(dpg_ini_file_path)
+    if dpg_ini_file.exists():
+        os.remove(dpg_ini_file_path)
+    shutil.copy(default_dpg_ini_file_path, dpg_ini_file_path)

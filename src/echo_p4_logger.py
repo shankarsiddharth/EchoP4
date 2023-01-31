@@ -1,15 +1,14 @@
-import os
-import sys
 import logging
+import os
 import pathlib
+import sys
 import threading
 from logging.handlers import SocketHandler
 
 import custom_logging as c_logging
-from echo_p4_ui_logger import EchoP4UILogger
 import echo_p4_constants as ep4c
 import p4_tools_helper as p4th
-from app_error import AppError
+from echo_p4_ui_logger import EchoP4UILogger
 
 
 class EchoP4Logger(object):
@@ -45,7 +44,7 @@ class EchoP4Logger(object):
                 os.makedirs(self.log_folder_path)
             except OSError as e:
                 exception_message = ("Creation of the log folder %s failed" % self.log_folder_path) + str(e)
-                raise AppError(exception_message)
+                print(exception_message)
 
         print("Log Folder exists.")
         self.log_file_path = os.path.join(self.log_folder_path, ep4c.LOG_FILE_NAME)
@@ -125,6 +124,10 @@ class EchoP4Logger(object):
             self.warning('Test Warning')
             self.error('Test Error')
             self.critical('Test Critical')
+
+    def close_ui(self):
+        if self.ui_logger is not None:
+            self.ui_logger = None
 
     def _log(self, level, message, *args):
 

@@ -10,6 +10,7 @@ from app_error import AppError
 from app_exit import AppExit
 from app_globals import log
 from application_initial_setup import ApplicationInitialSetup
+from app_utility import AppUtility
 
 # Constants
 is_load_default_layout_clicked = False
@@ -130,18 +131,20 @@ def main() -> None:
 
 if __name__ == "__main__":
 
-    try:
-        ApplicationInitialSetup()
-    except AppExit as e:
-        log.info("Application Exited by User.")
-        sys.exit(0)
-    except AppError as e:
-        log.error(str(e))
-        sys.exit(0)
-    except BaseException as e:
-        log.error("Error occurred while initializing the application: " + str(e))
-        sys.exit(0)
+    # try:
+    #     ApplicationInitialSetup()
+    # except AppExit as e:
+    #     log.info("Application Exited by User.")
+    #     sys.exit(0)
+    # except AppError as e:
+    #     log.error(str(e))
+    #     sys.exit(0)
+    # except BaseException as e:
+    #     log.error("Error occurred while initializing the application: " + str(e))
+    #     sys.exit(0)
+    #
+    # log.info("Starting the application...")
 
-    log.info("Starting the application...")
+    # main()
 
-    main()
+    AppUtility()

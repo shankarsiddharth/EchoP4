@@ -7,7 +7,7 @@ import p4_tools_helper as p4th
 from app_globals import log
 
 
-class AppErrorUI(object):
+class AppMessageUI(object):
     __minimum_width__ = 700
     __minimum_height__ = 300
 
@@ -21,10 +21,10 @@ class AppErrorUI(object):
             viewport_height = self.__minimum_height__
         self.VIEWPORT_WIDTH = viewport_width
         self.VIEWPORT_HEIGHT = viewport_height
-        self.viewport_title = "Application Error"
-        self.window_title = "Application Error Window"
-        self.message_title_text = "Error Message"
-        self.error_message_text_tag = "Error Message Text"
+        self.viewport_title = "Application Message"
+        self.window_title = "Application Message Window"
+        self.message_title_text = "Message"
+        self.user_message_text_tag = "Message Text"
         self.close_button_tag = "Close Button"
         self.close_button_text = "Close Application"
         self.reset_data_button_tag = "Reset Data Button"
@@ -62,7 +62,7 @@ class AppErrorUI(object):
 
     def __reset_data_button_clicked__(self, sender, data):
         exception_message = ''
-        dpg.configure_item(self.error_message_text_tag, default_value="Trying to reset user data...")
+        dpg.configure_item(self.user_message_text_tag, default_value="Trying to reset user data...")
         dpg.configure_item(self.reset_data_button_tag, show=False)
         dpg.configure_item(self.reset_data_group_tag, show=False)
         try:
@@ -70,10 +70,10 @@ class AppErrorUI(object):
             log.info("User data reset successfully.")
         except BaseException as e:
             exception_message = f"An error occurred while trying to reset the user data. Error: {e}"
-            dpg.configure_item(self.error_message_text_tag, default_value=exception_message)
+            dpg.configure_item(self.user_message_text_tag, default_value=exception_message)
             return
         if exception_message == '':
-            dpg.configure_item(self.error_message_text_tag, default_value="User data has been reset.\nPlease restart the application.")
+            dpg.configure_item(self.user_message_text_tag, default_value="User data has been reset.\nPlease restart the application.")
 
     @staticmethod
     def _hsv_to_rgb(h, s, v):
@@ -110,9 +110,9 @@ class AppErrorUI(object):
 
         with dpg.theme(tag=self.red_button_theme_tag):
             with dpg.theme_component(dpg.mvButton):
-                dpg.add_theme_color(dpg.mvThemeCol_Button, self._hsv_to_rgb(0, 0.6, 0.6))
-                dpg.add_theme_color(dpg.mvThemeCol_ButtonActive, self._hsv_to_rgb(0, 0.8, 0.8))
-                dpg.add_theme_color(dpg.mvThemeCol_ButtonHovered, self._hsv_to_rgb(0, 0.7, 0.7))
+                dpg.add_theme_color(dpg.mvThemeCol_Button, self._hsv_to_rgb(4.0/7.0, 0.6, 0.6))
+                dpg.add_theme_color(dpg.mvThemeCol_ButtonActive, self._hsv_to_rgb(4.0/7.0, 0.8, 0.8))
+                dpg.add_theme_color(dpg.mvThemeCol_ButtonHovered, self._hsv_to_rgb(4.0/7.0, 0.7, 0.7))
                 dpg.add_theme_style(dpg.mvStyleVar_FrameRounding, self.padding_value * 5)
                 dpg.add_theme_style(dpg.mvStyleVar_FramePadding, self.padding_value * 3, self.padding_value * 3)
 
@@ -133,7 +133,7 @@ class AppErrorUI(object):
         with dpg.window(label=self.window_title, tag=self.window_title, no_title_bar=False, no_close=True, modal=False, no_resize=True):
             dpg.add_text(self.message_title_text)
             dpg.add_spacer(height=10)
-            dpg.add_text(self.message, tag=self.error_message_text_tag, wrap=self.text_wrap_length)
+            dpg.add_text(self.message, tag=self.user_message_text_tag, wrap=self.text_wrap_length)
             dpg.add_button(label=self.close_button_text, tag=self.close_button_tag, callback=self.__close_button_clicked__, pos=[self.cx, self.cy])
             dpg.bind_item_theme(self.close_button_tag, self.red_button_theme_tag)
             if self.should_reset_data:
@@ -165,15 +165,15 @@ class AppErrorUI(object):
         dpg.destroy_context()
 
 
-class AppError(Exception):
+class AppMessage(Exception):
 
     def __init__(self, message=None, should_reset_data=False):
         self.message = message
         self.should_reset_data = should_reset_data
-        self.app_error_ui = AppErrorUI(message=message, should_reset_data=should_reset_data)
+        self.app_message_ui = AppMessageUI(message=message, should_reset_data=should_reset_data)
 
     def __str__(self):
         if self.message is None:
-            return "Application Error"
+            return "Application Message"
         else:
             return self.message
