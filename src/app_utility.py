@@ -66,6 +66,14 @@ class AppUtilityUI(threading.Thread):
         self.reset_to_default_layout_tag: str = "Reset to Default Layout"
         self.reset_user_data_tag: str = "Reset User Data"
 
+        # ***** Command Window ***** #
+        # Make Writable
+        self.make_writable_tag = "Make Writable"
+        # Clear Intermediate
+        self.clear_intermediate_tag = "Clear Intermediate"
+        # Checked Out Files
+        self.checked_out_files_tag = "Checked Out Files"
+
         self.default_dpg_ini_file_path = p4th.get_default_dpg_ini_file_path()
         self.dpg_ini_file_path = p4th.get_dpg_ini_file_path()
 
@@ -141,10 +149,11 @@ class AppUtilityUI(threading.Thread):
 
         # Command Window
         with dpg.window(label=self.command_window_title, tag=self.command_window_title, no_title_bar=False, no_close=True):
-            dpg.add_text("Hello, world")
-            dpg.add_button(label="Add Log", callback=self.add_log)
-            dpg.add_input_text(label="string", default_value="Quick brown fox")
-            dpg.add_slider_float(label="float", default_value=0.273, max_value=1)
+            with dpg.collapsing_header(label=self.make_writable_tag, tag=self.make_writable_tag, default_open=True):
+                dpg.add_text("Hello, world")
+                dpg.add_button(label="Add Log", callback=self.add_log)
+                dpg.add_input_text(label="string", default_value="Quick brown fox")
+                dpg.add_slider_float(label="float", default_value=0.273, max_value=1)
 
         log.init_ui()
 
