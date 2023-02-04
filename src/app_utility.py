@@ -131,6 +131,13 @@ class AppUtilityUI(threading.Thread):
 
         dpg.set_exit_callback(callback=self.__exit_callback__)
 
+        # add a font registry
+        with dpg.font_registry():
+            # first argument ids the path to the .ttf or .otf file
+            default_font = dpg.add_font(p4th.get_default_font_file_path(), p4th.get_default_font_size())
+
+        dpg.bind_font(default_font)
+
         # Menu Bar
         with dpg.viewport_menu_bar():
             # File Menu
@@ -154,6 +161,9 @@ class AppUtilityUI(threading.Thread):
                 dpg.add_button(label="Add Log", callback=self.add_log)
                 dpg.add_input_text(label="string", default_value="Quick brown fox")
                 dpg.add_slider_float(label="float", default_value=0.273, max_value=1)
+                dpg.add_separator()
+
+        dpg.show_font_manager()
 
         log.init_ui()
 

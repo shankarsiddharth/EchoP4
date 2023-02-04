@@ -10,6 +10,12 @@ import echo_p4_constants as ep4c
 KEY_FOLDER_NAME = ".ep4dpg"
 KEY_FILE_NAME = "ep4.key"
 
+ASSETS_FOLDER_NAME = "assets"
+FONTS_FOLDER_NAME = "fonts"
+OPEN_SANS_FOLDER_NAME = "opensans"
+DEFAULT_FONT_SIZE = 18
+DEFAULT_FONT_NAME = "OpenSans-Regular.ttf"
+
 
 def get_root_folder():
     bin_src_folder = os.path.dirname(os.path.realpath(__file__))
@@ -209,3 +215,16 @@ def reset_to_default_layout():
     if dpg_ini_file.exists():
         os.remove(dpg_ini_file_path)
     shutil.copy(default_dpg_ini_file_path, dpg_ini_file_path)
+
+
+def get_default_font_file_path():
+    root_folder = get_root_folder()
+    asset_folder = os.path.join(root_folder, ASSETS_FOLDER_NAME)
+    font_folder = os.path.join(asset_folder, FONTS_FOLDER_NAME)
+    opensans_font_folder = os.path.join(font_folder, OPEN_SANS_FOLDER_NAME)
+    default_font_file_path = os.path.join(opensans_font_folder, DEFAULT_FONT_NAME)
+    return default_font_file_path
+
+
+def get_default_font_size():
+    return DEFAULT_FONT_SIZE

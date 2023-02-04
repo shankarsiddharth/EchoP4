@@ -364,6 +364,13 @@ class P4GroupInfoUI(threading.Thread):
 
         dpg.set_exit_callback(callback=self.__exit_callback__)
 
+        # add a font registry
+        with dpg.font_registry():
+            # first argument ids the path to the .ttf or .otf file
+            default_font = dpg.add_font(p4th.get_default_font_file_path(), p4th.get_default_font_size())
+
+        dpg.bind_font(default_font)
+
         with dpg.handler_registry(tag=self.key_navigate_handler_registry_tag):
             dpg.add_key_press_handler(key=dpg.mvKey_Up, callback=self.__up_clicked__)
             dpg.add_key_press_handler(key=dpg.mvKey_Down, callback=self.__down_clicked__)
