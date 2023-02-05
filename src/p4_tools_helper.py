@@ -13,8 +13,10 @@ KEY_FILE_NAME = "ep4.key"
 ASSETS_FOLDER_NAME = "assets"
 FONTS_FOLDER_NAME = "fonts"
 OPEN_SANS_FOLDER_NAME = "opensans"
-DEFAULT_FONT_SIZE = 18
 DEFAULT_FONT_NAME = "OpenSans-Regular.ttf"
+DEFAULT_FONT_SIZE = 18
+DEFAULT_BOLD_FONT_NAME = "OpenSans-Bold.ttf"
+DEFAULT_BOLD_FONT_SIZE = 16
 
 
 def get_root_folder():
@@ -228,3 +230,17 @@ def get_default_font_file_path():
 
 def get_default_font_size():
     return DEFAULT_FONT_SIZE
+
+
+def get_default_bold_font_file_path():
+    root_folder = get_root_folder()
+    asset_folder = os.path.join(root_folder, ASSETS_FOLDER_NAME)
+    font_folder = os.path.join(asset_folder, FONTS_FOLDER_NAME)
+    opensans_font_folder = os.path.join(font_folder, OPEN_SANS_FOLDER_NAME)
+    default_font_file_path = os.path.join(opensans_font_folder, DEFAULT_BOLD_FONT_NAME)
+    return default_font_file_path
+
+
+def get_bold_default_font_size():
+    return DEFAULT_BOLD_FONT_SIZE
+

@@ -66,11 +66,38 @@ class AppUtilityUI(threading.Thread):
         self.reset_to_default_layout_tag: str = "Reset to Default Layout"
         self.reset_user_data_tag: str = "Reset User Data"
 
+        # Theme
+        self.red_button_theme_tag = "Red Button Theme"
+
         # ***** Command Window ***** #
         # Make Writable
-        self.make_writable_tag = "Make Writable"
+        self.make_writable_tag = "Make Files Writable (Binaries & Source)"
+        self.make_writable_project_binaries_tree_tag = "Project Binaries"
+        self.make_writable_plugin_binaries_tree_tag = "Plugin Binaries"
+        self.make_writable_project_source_tree_tag = "Project Source"
+        self.make_writable_plugin_source_tree_tag = "Plugin Source"
+
+        self.make_project_binaries_writable_tag = "Project Binaries (Make Files Writable)"
+        self.make_plugin_binaries_writable_tag = "Plugin Binaries (Make Files Writable)"
+        self.make_project_source_writable_tag = "Project Source (Make Files Writable)"
+        self.make_plugin_source_writable_tag = "Plugin Source (Make Files Writable)"
+        self.make_writable_help_message = "(Remove Read-Only Flag/Attribute)\n"
         # Clear Intermediate
         self.clear_intermediate_tag = "Clear Intermediate"
+        self.clear_project_intermediate_tree_tag = "Project Intermediate"
+        self.clear_plugin_intermediate_tree_tag = "Plugin Intermediate"
+
+        self.clear_project_intermediate_tag = "Delete Project Intermediate Folder"
+        self.clear_plugin_intermediate_tag = "Delete Plugin Intermediate Folder"
+        self.clear_intermediate_help_message = "(Delete the Intermediate Folder and Files)\n"
+        # Clear Saved
+        self.clear_saved_tag = "Clear Saved"
+        self.clear_project_saved_tree_tag = "Project Saved"
+        self.clear_plugin_saved_tree_tag = "Plugin Saved"
+
+        self.clear_project_saved_tag = "Delete Project Saved Folder"
+        self.clear_plugin_saved_tag = "Delete Plugin Saved Folder"
+        self.clear_saved_help_message = "(Delete the Saved Folder and Files)\n"
         # Checked Out Files
         self.checked_out_files_tag = "Checked Out Files"
 
@@ -111,8 +138,54 @@ class AppUtilityUI(threading.Thread):
         self.reset_user_data = True
         pass
 
-    def add_log(self):
-        log.debug("Button Clicked")
+    def _help(self, message):
+        last_item = dpg.last_item()
+        group = dpg.add_group(horizontal=True)
+        dpg.move_item(last_item, parent=group)
+        dpg.capture_next_item(lambda s: dpg.move_item(s, parent=group))
+        t = dpg.add_text("(?)", color=[0, 255, 0])
+        with dpg.tooltip(t):
+            dpg.add_text(message)
+
+    def __make_project_binaries_writable__(self, sender, data):
+        log.info("User clicked on the Make Project Binaries Writable button.")
+
+        pass
+
+    def __make_plugin_binaries_writable__(self, sender, data):
+        log.info("User clicked on the Make Plugin Binaries Writable button.")
+
+        pass
+
+    def __make_project_source_writable__(self, sender, data):
+        log.info("User clicked on the Make Project Source Writable button.")
+
+        pass
+
+    def __make_plugin_source_writable__(self, sender, data):
+        log.info("User clicked on the Make Plugin Source Writable button.")
+
+        pass
+
+    def __clear_project_intermediate__(self, sender, data):
+        log.info("User clicked on the Clear Project Intermediate button.")
+
+        pass
+
+    def __clear_plugin_intermediate__(self, sender, data):
+        log.info("User clicked on the Clear Plugin Intermediate button.")
+
+        pass
+
+    def __clear_project_saved__(self, sender, data):
+        log.info("User clicked on the Clear Project Saved button.")
+
+        pass
+
+    def __clear_plugin_saved__(self, sender, data):
+        log.info("User clicked on the Clear Plugin Saved button.")
+
+        pass
 
     def __init_ui__(self):
 
@@ -131,10 +204,18 @@ class AppUtilityUI(threading.Thread):
 
         dpg.set_exit_callback(callback=self.__exit_callback__)
 
+        # Add Theme
+        with dpg.theme(tag=self.red_button_theme_tag):
+            with dpg.theme_component(dpg.mvButton):
+                dpg.add_theme_color(dpg.mvThemeCol_Button, (200, 0, 0, 255))
+                dpg.add_theme_color(dpg.mvThemeCol_ButtonActive, (178, 34, 34, 255))
+                dpg.add_theme_color(dpg.mvThemeCol_ButtonHovered, (220, 20, 60, 255))
+
         # add a font registry
         with dpg.font_registry():
             # first argument ids the path to the .ttf or .otf file
             default_font = dpg.add_font(p4th.get_default_font_file_path(), p4th.get_default_font_size())
+            default_bold_font = dpg.add_font(p4th.get_default_bold_font_file_path(), p4th.get_default_font_size())
 
         dpg.bind_font(default_font)
 
@@ -156,16 +237,65 @@ class AppUtilityUI(threading.Thread):
 
         # Command Window
         with dpg.window(label=self.command_window_title, tag=self.command_window_title, no_title_bar=False, no_close=True):
+            # Make Files Writable
             with dpg.collapsing_header(label=self.make_writable_tag, tag=self.make_writable_tag, default_open=True):
-                dpg.add_text("Hello, world")
-                dpg.add_button(label="Add Log", callback=self.add_log)
-                dpg.add_input_text(label="string", default_value="Quick brown fox")
-                dpg.add_slider_float(label="float", default_value=0.273, max_value=1)
-                dpg.add_separator()
-
-        dpg.show_font_manager()
-
-        log.init_ui()
+                with dpg.tree_node(label=self.make_writable_project_binaries_tree_tag, tag=self.make_writable_project_binaries_tree_tag, default_open=True):
+                    dpg.add_text("Click the button to make all the files in the Project Binaries folder writable.")
+                    dpg.add_button(label=self.make_project_binaries_writable_tag, tag=self.make_project_binaries_writable_tag, callback=self.__make_project_binaries_writable__)
+                    dpg.bind_item_font(dpg.last_item(), default_bold_font)
+                    self._help(self.make_writable_help_message)
+                    dpg.add_separator()
+                with dpg.tree_node(label=self.make_writable_plugin_binaries_tree_tag, tag=self.make_writable_plugin_binaries_tree_tag, default_open=True):
+                    dpg.add_text("Click the button to make all the files in the Plugin Binaries folder writable.")
+                    dpg.add_button(label=self.make_plugin_binaries_writable_tag, tag=self.make_plugin_binaries_writable_tag, callback=self.__make_plugin_binaries_writable__)
+                    dpg.bind_item_font(dpg.last_item(), default_bold_font)
+                    self._help(self.make_writable_help_message)
+                    dpg.add_separator()
+                with dpg.tree_node(label=self.make_writable_project_source_tree_tag, tag=self.make_writable_project_source_tree_tag, default_open=True):
+                    dpg.add_text("Click the button to make all the files in the Project Source folder writable.")
+                    dpg.add_button(label=self.make_project_source_writable_tag, tag=self.make_project_source_writable_tag, callback=self.__make_project_source_writable__)
+                    dpg.bind_item_font(dpg.last_item(), default_bold_font)
+                    self._help(self.make_writable_help_message)
+                    dpg.add_separator()
+                with dpg.tree_node(label=self.make_writable_plugin_source_tree_tag, tag=self.make_writable_plugin_source_tree_tag, default_open=True):
+                    dpg.add_text("Click the button to make all the files in the Plugin Source folder writable.")
+                    dpg.add_button(label=self.make_plugin_source_writable_tag, tag=self.make_plugin_source_writable_tag, callback=self.__make_plugin_source_writable__)
+                    dpg.bind_item_font(dpg.last_item(), default_bold_font)
+                    self._help(self.make_writable_help_message)
+                    dpg.add_separator()
+            # Clear Intermediate
+            with dpg.collapsing_header(label=self.clear_intermediate_tag, tag=self.clear_intermediate_tag, default_open=True):
+                with dpg.tree_node(label=self.clear_project_intermediate_tree_tag, tag=self.clear_project_intermediate_tree_tag, default_open=True):
+                    dpg.add_text("Click the button to delete Project Intermediate folder.")
+                    dpg.add_button(label=self.clear_project_intermediate_tag, tag=self.clear_project_intermediate_tag, callback=self.__clear_project_intermediate__)
+                    dpg.bind_item_font(dpg.last_item(), default_bold_font)
+                    dpg.bind_item_theme(dpg.last_item(), self.red_button_theme_tag)
+                    self._help(self.clear_intermediate_help_message)
+                    dpg.add_separator()
+                with dpg.tree_node(label=self.clear_plugin_intermediate_tree_tag, tag=self.clear_plugin_intermediate_tree_tag, default_open=True):
+                    dpg.add_text("Click the button to delete Plugin Intermediate folder.")
+                    dpg.add_button(label=self.clear_plugin_intermediate_tag, tag=self.clear_plugin_intermediate_tag, callback=self.__clear_plugin_intermediate__)
+                    dpg.bind_item_font(dpg.last_item(), default_bold_font)
+                    dpg.bind_item_theme(dpg.last_item(), self.red_button_theme_tag)
+                    self._help(self.clear_intermediate_help_message)
+                    dpg.add_separator()
+            # Clear Saved
+            with dpg.collapsing_header(label=self.clear_saved_tag, tag=self.clear_saved_tag, default_open=True):
+                with dpg.tree_node(label=self.clear_project_saved_tree_tag, tag=self.clear_project_saved_tree_tag, default_open=True):
+                    dpg.add_text("Click the button to delete Project Saved folder.")
+                    dpg.add_button(label=self.clear_project_saved_tag, tag=self.clear_project_saved_tag, callback=self.__clear_project_saved__)
+                    dpg.bind_item_font(dpg.last_item(), default_bold_font)
+                    dpg.bind_item_theme(dpg.last_item(), self.red_button_theme_tag)
+                    self._help(self.clear_saved_help_message)
+                    dpg.add_separator()
+                with dpg.tree_node(label=self.clear_plugin_saved_tree_tag, tag=self.clear_plugin_saved_tree_tag, default_open=True):
+                    dpg.add_text("Click the button to delete Plugin Saved folder.")
+                    dpg.add_button(label=self.clear_plugin_saved_tag, tag=self.clear_plugin_saved_tag, callback=self.__clear_plugin_saved__)
+                    dpg.bind_item_font(dpg.last_item(), default_bold_font)
+                    dpg.bind_item_theme(dpg.last_item(), self.red_button_theme_tag)
+                    self._help(self.clear_saved_help_message)
+                    dpg.add_separator()
+        # log.init_ui()
 
         dpg.setup_dearpygui()
         dpg.show_viewport()
