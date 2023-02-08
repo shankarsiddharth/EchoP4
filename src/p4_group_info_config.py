@@ -76,8 +76,8 @@ class P4GroupInfoConfigController(object):
 
         root_folder_path = p4th.get_root_folder()
         data_folder_path = os.path.join(root_folder_path, ep4c.DATA_FOLDER_NAME)
-        team_members_json_file_path = os.path.join(data_folder_path, ep4c.GROUP_MEMBERS_INFO_JSON_FILE_NAME)
-        group_members_json_file_path = os.path.join(data_folder_path, ep4c.GROUP_INFO_JSON_FILE_NAME)
+        group_members_info_json_file_path = os.path.join(data_folder_path, ep4c.GROUP_MEMBERS_INFO_JSON_FILE_NAME)
+        group_info_json_file_path = os.path.join(data_folder_path, ep4c.GROUP_INFO_JSON_FILE_NAME)
 
         data_folder = pathlib.Path(data_folder_path)
         if not data_folder.exists():
@@ -112,9 +112,9 @@ class P4GroupInfoConfigController(object):
                 raise AppError(log_text)
 
             log.info("Group details found for Group: %s", group_name)
-            with open(group_members_json_file_path, 'w', encoding='UTF-8') as group_members_json:
-                json.dump(group_details[0], group_members_json, indent=4)
-            log.info("Group details saved to file: %s", group_members_json_file_path)
+            with open(group_info_json_file_path, 'w', encoding='UTF-8') as group_info_json:
+                json.dump(group_details[0], group_info_json, indent=4)
+            log.info("Group details saved to file: %s", group_info_json_file_path)
             group_users_list = group_details[0]['Users']
 
             team_members = dict()
@@ -127,9 +127,9 @@ class P4GroupInfoConfigController(object):
                     result['message'] = log_text
                     raise AppError(log_text)
                 team_members[user] = user_details[0]
-            with open(team_members_json_file_path, 'w', encoding='UTF-8') as team_members_json:
-                json.dump(team_members, team_members_json, indent=4)
-            log.info("Team members details saved to file: %s", team_members_json_file_path)
+            with open(group_members_info_json_file_path, 'w', encoding='UTF-8') as group_members_info_json:
+                json.dump(team_members, group_members_info_json, indent=4, sort_keys=True)
+            log.info("Team members details saved to file: %s", group_members_info_json_file_path)
             result['group_data_generated'] = True
 
             p4.disconnect()

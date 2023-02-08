@@ -16,6 +16,8 @@ from app_error import AppError
 from app_exit import AppExit
 from app_message import AppMessage
 from app_globals import log
+from checked_out_files_panel import CheckedOutFilesPanel
+from group_members_panel import GroupMembersPanel
 
 
 class AppUtilityController(object):
@@ -34,7 +36,8 @@ class AppUtilityUI(threading.Thread):
     __minimum_width__ = 1200
     __minimum_height__ = 900
 
-    def __init__(self, app_utility_controller=None, viewport_width=__minimum_width__, viewport_height=__minimum_height__):
+    def __init__(self, app_utility_controller=None, group_members_panel=None, checked_out_files_panel=None,
+                 viewport_width=__minimum_width__, viewport_height=__minimum_height__):
         super().__init__()
 
         self.exception = None
@@ -43,7 +46,17 @@ class AppUtilityUI(threading.Thread):
             self.app_utility_controller = None
             return
 
+        if group_members_panel is None:
+            self.group_members_panel = None
+            return
+
+        if checked_out_files_panel is None:
+            self.checked_out_files_panel = None
+            return
+
         self.app_utility_controller: AppUtilityController = app_utility_controller
+        self.group_members_panel: GroupMembersPanel = group_members_panel
+        self.checked_out_files_panel: CheckedOutFilesPanel = checked_out_files_panel
 
         # DearPyGUI's Viewport Constants
         if viewport_width is None or viewport_width <= self.__minimum_width__:
@@ -295,9 +308,16 @@ class AppUtilityUI(threading.Thread):
                     dpg.bind_item_theme(dpg.last_item(), self.red_button_theme_tag)
                     self._help(self.clear_saved_help_message)
                     dpg.add_separator()
-        # log.init_ui()
+
+        # Log Panel
+        log.init_ui()
+        # Group Members Panel
+        self.group_members_panel.init_ui()
+        # Checked Out Files Panel
+        self.checked_out_files_panel.init_ui()
 
         dpg.setup_dearpygui()
+        dpg.maximize_viewport()
         dpg.show_viewport()
 
         # below replaces, start_dearpygui()
@@ -325,7 +345,7 @@ class AppUtility(object):
 
     def init_and_render_ui(self):
         while not self.app_utility_controller.is_window_close_button_clicked:
-            self.app_utility_ui = AppUtilityUI(self.app_utility_controller)
+            self.app_utility_ui = AppUtilityUI(self.app_utility_controller, self.group_members_panel, self.checked_out_files_panel)
             self.app_utility_ui.start()
             try:
                 self.app_utility_ui.join()
@@ -346,6 +366,9 @@ class AppUtility(object):
         self.p4_ini_file_path = None
         self.app_utility_controller = AppUtilityController()
         self.app_utility_ui = None
+
+        self.group_members_panel = GroupMembersPanel()
+        self.checked_out_files_panel = CheckedOutFilesPanel()
 
         self.init_and_render_ui()
 
