@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import re
+from datetime import datetime
 
 import dearpygui.dearpygui as dpg
 from P4 import P4, P4Exception
@@ -17,6 +18,7 @@ class CheckedOutFilesController:
     def __init__(self):
         self.regex_pattern = r"(//.+/...) (//.+/...)"  # e.g. //depot/... //client/...
         self.checked_out_files = dict()
+        self.last_refresh_time_text = "Click Refresh to get the latest data"
 
         if not p4th.is_group_members_info_present():
             raise AppError("Group members info file not found", should_reset_data=True)
@@ -30,7 +32,6 @@ class CheckedOutFilesController:
             full_name = group_member_info["FullName"]
             full_name_split = full_name.split(" ")
             self.group_members_info_dict[group_member_id] = full_name_split[0]
-        pass
 
     def get_checked_out_files(self):
 
@@ -78,6 +79,7 @@ class CheckedOutFilesController:
             if len(checked_out_files) == 0:
                 logging.info("No files checked out.")
                 return self.checked_out_files
+            self.__update_last_refresh_time_text__()
 
             p4_client_view_depot_path_string = p4_client_view_depot_path.replace("...", "")
             checked_out_file_count = 0
@@ -116,6 +118,12 @@ class CheckedOutFilesController:
 
         return self.checked_out_files
 
+    def __update_last_refresh_time_text__(self):
+        self.last_refresh_time_text = "Last Refresh: " + datetime.now().strftime("%d %B, %Y - %I:%M:%S %p")
+
+    def get_last_refresh_time_text(self):
+        return self.last_refresh_time_text
+
 
 class CheckedOutFilesPanel:
     def __init__(self, parent=None, is_open=True):
@@ -132,8 +140,36 @@ class CheckedOutFilesPanel:
         self.child_id = None
 
         self.window_tag = "Checked Out Files"
+        self.refresh_button_tag = "Refresh"
+        self.show_all_id = "Show All Files"
+        self.hide_external_id = "Hide External Actors & Objects"
+        self.hide_binaries_id = "Hide Binaries"
+        self.hide_source_id = "Hide Source"
+        self.hide_config_id = "Hide Config"
+        self.hide_content_id = "Hide Content"
+        self.hide_plugins_id = "Hide Plugins"
         self.checked_out_files_table_tag = None
         self._filter_text_tag = "Checked Out Filter Text Box"
+        self.refresh_group_tag = "Refresh Group"
+        self.filter_group_tag = "Filter Group"
+        self.hide_filter_group_tag = "Hide Filter Group"
+        self.last_refresh_time_text_tag = "Last Refresh Time Text"
+        self.last_refresh_time_text = self.controller.get_last_refresh_time_text()
+
+        self.filter_ui_text = ""
+        self.filter_ui_text_previous = ""
+        self.filter_text_current = ""
+        self.filter_text_external_actors = "-__ExternalActors__,"
+        self.filter_text_external_objects = "-__ExternalObjects__,"
+        self.filter_text_binaries = "-Binaries,"
+        self.filter_text_source = "-Source,"
+        self.filter_text_config = "-Config,"
+        self.filter_text_content = "-Content,"
+        self.filter_text_plugins = "-Plugins,"
+
+        self.filter_text_current = self.filter_text_external_actors + self.filter_text_external_objects + self.filter_text_binaries
+        # self.filter_text_current += self.filter_text_source + self.filter_text_config + self.filter_text_plugins
+        self.filter_text_current += self.filter_text_source + self.filter_text_config
 
         self.checked_out_files = dict()
         self.checked_out_files = self.controller.get_checked_out_files()
@@ -146,19 +182,34 @@ class CheckedOutFilesPanel:
 
         self.checked_out_files_table_tag = dpg.generate_uuid()
         self.filter_id = dpg.add_input_text(parent=self.window_id, label="Filter (inc, -exc)", user_data=self.checked_out_files_table_tag,
-                                            callback=lambda s, a, u: dpg.set_value(u, dpg.get_value(s)))
+                                            default_value=self.filter_ui_text, show=False,
+                                            # callback=lambda s, a, u: dpg.set_value(u, dpg.get_value(s)))
+                                            callback=self.__callback_on_filter_text_changed__)
 
-        with dpg.group(horizontal=True, parent=self.window_id, before=self.filter_id):
-            dpg.add_button(label="Refresh", callback=lambda: dpg.delete_item(self.table_id, children_only=True))
+        with dpg.group(tag=self.filter_group_tag, horizontal=True, parent=self.window_id, before=self.filter_id, show=True):
+            dpg.add_checkbox(tag=self.show_all_id, label=self.show_all_id, default_value=False, show=False, callback=self.__callback_show_all_files__)
+            with dpg.group(tag=self.hide_filter_group_tag, horizontal=True, show=False):
+                dpg.add_checkbox(tag=self.hide_binaries_id, label=self.hide_binaries_id, default_value=True, callback=self.__callback_hide_binaries__)
+                dpg.add_checkbox(tag=self.hide_config_id, label=self.hide_config_id, default_value=True, callback=self.__callback_hide_config__)
+                dpg.add_checkbox(tag=self.hide_content_id, label=self.hide_content_id, default_value=False, callback=self.__callback_hide_content__)
+                dpg.add_checkbox(tag=self.hide_external_id, label=self.hide_external_id, default_value=True, callback=self.__callback_hide_external__)
+                # dpg.add_checkbox(tag=self.hide_plugins_id, label=self.hide_plugins_id, default_value=True, callback=self.__callback_hide_plugins__)
+                dpg.add_checkbox(tag=self.hide_source_id, label=self.hide_source_id, default_value=True, callback=self.__callback_hide_source__)
 
-        with dpg.table(parent=self.window_id, tag=self.checked_out_files_table_tag,
+        with dpg.group(tag=self.refresh_group_tag, horizontal=True, parent=self.window_id, before=self.filter_group_tag):
+            dpg.add_button(tag=self.refresh_button_tag, label=self.refresh_button_tag, callback=self.__callback_on_refresh__)
+            dpg.add_text(tag=self.last_refresh_time_text_tag, default_value=self.last_refresh_time_text)
+
+        self.__update_table__()
+
+    def __update_table__(self):
+        with dpg.table(parent=self.window_id, tag=self.checked_out_files_table_tag, show=False,
                        header_row=True, policy=dpg.mvTable_SizingFixedFit,
                        borders_innerH=True, borders_outerH=True,
                        borders_innerV=True, borders_outerV=True,
                        row_background=True, sortable=True, resizable=True, reorderable=False, no_host_extendX=True,
                        # callback=lambda sender, app_data, user_data: self.sort_callback(sender, None)):
                        callback=self.sort_callback) as self.table_id:
-
             self.file_name_column = dpg.add_table_column(label="Checked Out File", default_sort=True, prefer_sort_ascending=True, no_clip=True, width_fixed=False)
             self.username_column = dpg.add_table_column(label="User", default_sort=True, prefer_sort_ascending=True, no_clip=True, width_fixed=False)
             self.workspace_name_column = dpg.add_table_column(label="Workspace", default_sort=True, prefer_sort_ascending=True, no_clip=True, width_fixed=False)
@@ -227,5 +278,103 @@ class CheckedOutFilesPanel:
 
         dpg.reorder_items(sender, 1, new_order)
 
-    def __callback_on_filter_text_changed(self, sender):
-        pass
+    def __process_filter_text__(self):
+        self.filter_ui_text = self.filter_ui_text.removesuffix(self.filter_ui_text_previous)
+        self.filter_text_current = self.filter_text_current.removesuffix(self.filter_ui_text_previous)
+        self.filter_ui_text = dpg.get_value(self.filter_id)
+        if self.filter_ui_text != "":
+            self.filter_ui_text_previous = self.filter_ui_text + ","
+            self.filter_text_current += self.filter_ui_text + ","
+        elif self.filter_ui_text == "":
+            self.filter_ui_text_previous = ""
+
+    def __callback_on_filter_text_changed__(self, sender, app_data, user_data):
+        self.__process_filter_text__()
+        dpg.set_value(self.checked_out_files_table_tag, self.filter_text_current)
+        log.trace(f"Filter: {self.filter_text_current}")
+
+    def __callback_hide_external__(self, sender, app_data, user_data):
+        is_checked = dpg.get_value(sender)
+        is_content_hidden = dpg.get_value(self.hide_content_id)
+        if not is_checked and is_content_hidden:
+            dpg.set_value(self.hide_external_id, True)
+            log.warning("Cannot show external actors & objects if content is hidden")
+            return
+        self.filter_text_current = self.filter_text_current.replace(self.filter_text_external_actors, "")
+        self.filter_text_current = self.filter_text_current.replace(self.filter_text_external_objects, "")
+        if is_checked:
+            self.filter_text_current = self.filter_text_external_actors + self.filter_text_current
+            self.filter_text_current = self.filter_text_external_objects + self.filter_text_current
+        self.__process_filter_text__()
+        log.trace(f"Filter: {self.filter_text_current}")
+        dpg.set_value(self.checked_out_files_table_tag, self.filter_text_current)
+
+    def __process_filter_folders__(self, sender, folder_text_to_filter):
+        is_checked = dpg.get_value(sender)
+        self.filter_text_current = self.filter_text_current.replace(folder_text_to_filter, "")
+        if is_checked:
+            self.filter_text_current = folder_text_to_filter + self.filter_text_current
+        self.__process_filter_text__()
+        log.trace(f"Filter: {self.filter_text_current}")
+        dpg.set_value(self.checked_out_files_table_tag, self.filter_text_current)
+
+    def __callback_hide_binaries__(self, sender, app_data, user_data):
+        self.__process_filter_folders__(sender, self.filter_text_binaries)
+
+    def __callback_hide_source__(self, sender, app_data, user_data):
+        self.__process_filter_folders__(sender, self.filter_text_source)
+
+    def __callback_hide_config__(self, sender, app_data, user_data):
+        self.__process_filter_folders__(sender, self.filter_text_config)
+
+    def __callback_hide_content__(self, sender, app_data, user_data):
+        is_content_hidden = dpg.get_value(sender)
+        dpg.configure_item(self.hide_external_id, show=not is_content_hidden)
+        self.__process_filter_folders__(sender, self.filter_text_content)
+
+    def __callback_hide_plugins__(self, sender, app_data, user_data):
+        self.__process_filter_folders__(sender, self.filter_text_plugins)
+
+    def __callback_show_all_files__(self, sender, app_data, user_data):
+        dpg.configure_item(self.filter_group_tag, show=False)
+        is_show_all_files_checked = dpg.get_value(sender)
+        dpg.configure_item(self.hide_filter_group_tag, show=not is_show_all_files_checked)
+        if is_show_all_files_checked:
+            filter_ui_text = dpg.get_value(self.filter_id)
+            if filter_ui_text != "":
+                filter_ui_text = filter_ui_text + ","
+            self.filter_text_current = self.filter_text_current.removesuffix(filter_ui_text)
+            self.filter_text_cache = self.filter_text_current
+            self.filter_text_current = ""
+            dpg.set_value(self.filter_id, self.filter_text_current)
+            log.trace(f"Filter: {self.filter_text_current}")
+            dpg.set_value(self.checked_out_files_table_tag, self.filter_text_current)
+        else:
+            self.__process_filter_text__()
+            dpg.set_value(self.filter_id, "")
+            self.filter_text_current = self.filter_text_cache
+            log.trace(f"Filter: {self.filter_text_current}")
+            dpg.set_value(self.checked_out_files_table_tag, self.filter_text_current)
+        dpg.configure_item(self.filter_group_tag, show=True)
+
+    def __callback_on_refresh__(self):
+        dpg.configure_item(self.refresh_button_tag, show=False)
+        self.checked_out_files.clear()
+        dpg.delete_item(self.table_id)
+        self.checked_out_files = self.controller.get_checked_out_files()
+        self.last_refresh_time_text = self.controller.get_last_refresh_time_text()
+        dpg.configure_item(self.last_refresh_time_text_tag, default_value=self.last_refresh_time_text)
+        self.__update_table__()
+        self.__callback_hide_external__(self.hide_external_id, None, None)
+        self.__callback_hide_binaries__(self.hide_binaries_id, None, None)
+        self.__callback_hide_source__(self.hide_source_id, None, None)
+        self.__callback_hide_config__(self.hide_config_id, None, None)
+        self.__callback_hide_content__(self.hide_content_id, None, None)
+        self.__callback_hide_plugins__(self.hide_plugins_id, None, None)
+        dpg.configure_item(self.refresh_group_tag, show=True)
+        dpg.configure_item(self.filter_group_tag, show=True)
+        dpg.configure_item(self.show_all_id, show=True)
+        dpg.configure_item(self.hide_filter_group_tag, show=True)
+        dpg.configure_item(self.filter_id, show=True)
+        dpg.configure_item(self.table_id, show=True)
+        dpg.configure_item(self.refresh_button_tag, show=True)
