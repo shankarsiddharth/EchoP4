@@ -1,23 +1,126 @@
 import json
+import logging
+import os
+import re
 
 import dearpygui.dearpygui as dpg
+from P4 import P4, P4Exception
+
 import p4_tools_helper as p4th
+import echo_p4_constants as ep4c
 from app_error import AppError
+from app_globals import log
 
 
-class CheckedOutFilesPanelController:
+class CheckedOutFilesController:
 
     def __init__(self):
+        self.regex_pattern = r"(//.+/...) (//.+/...)"  # e.g. //depot/... //client/...
+        self.checked_out_files = dict()
+
+        if not p4th.is_group_members_info_present():
+            raise AppError("Group members info file not found", should_reset_data=True)
+
+        group_members_info_file_path = p4th.get_group_members_info_file_path()
+        with open(group_members_info_file_path, 'r', encoding='UTF-8') as group_members_info_file:
+            self.group_members_info = json.load(group_members_info_file)
+
+        self.group_members_info_dict = dict()
+        for group_member_id, group_member_info in self.group_members_info.items():
+            full_name = group_member_info["FullName"]
+            full_name_split = full_name.split(" ")
+            self.group_members_info_dict[group_member_id] = full_name_split[0]
         pass
 
     def get_checked_out_files(self):
-        pass
+
+        self.checked_out_files.clear()
+
+        user_p4_config_data = p4th.get_user_p4_config_data()
+        if user_p4_config_data is None:
+            raise AppError("User p4 config data not found", should_reset_data=True)
+
+        p4_port = user_p4_config_data[ep4c.P4_CONFIG_SECTION][ep4c.KEY_P4PORT]
+        p4_user = user_p4_config_data[ep4c.P4_CONFIG_SECTION][ep4c.KEY_P4USER]
+        p4_client = user_p4_config_data[ep4c.P4_CONFIG_SECTION][ep4c.KEY_P4CLIENT]
+        encrypted_password = user_p4_config_data[ep4c.P4_CONFIG_SECTION][ep4c.KEY_P4PASSWD]
+        p4_password = p4th.decrypt_password(encrypted_password)
+
+        p4 = P4()
+        p4.port = p4_port
+        p4.user = p4_user
+        p4.client = p4_client
+        p4.password = p4_password
+
+        try:
+            # p4.client = client
+            p4.connect()
+            p4.run_login()
+
+            p4_client_detail_list = p4.run("client", "-o")
+            if len(p4_client_detail_list) == 0:
+                raise AppError("Unable to get client details.")
+
+            p4_client_detail = p4_client_detail_list[0]
+            p4_client_view = p4_client_detail["View"]
+            if len(p4_client_view) == 0:
+                raise AppError("Unable to get client view details.")
+
+            p4_current_client_view_string = p4_client_view[0].strip()
+            matches = re.search(self.regex_pattern, p4_current_client_view_string)
+            if matches is None or len(matches.groups()) != 2:
+                raise AppError("Unable to get client view details.")
+
+            p4_client_view_depot_path = matches.group(1)
+            p4_client_view_client_path = matches.group(2)
+
+            checked_out_files = p4.run("opened", "-a", p4_client_view_depot_path)
+            if len(checked_out_files) == 0:
+                logging.info("No files checked out.")
+                return self.checked_out_files
+
+            p4_client_view_depot_path_string = p4_client_view_depot_path.replace("...", "")
+            checked_out_file_count = 0
+            for checked_out_file_info in checked_out_files:
+                checked_out_file_count += 1
+                depot_file_path = checked_out_file_info["depotFile"]
+                file_name_details = os.path.split(depot_file_path)
+                file_name = file_name_details[1].strip()
+                file_path = file_name_details[0].strip()
+                project_file_path = file_path.replace(p4_client_view_depot_path_string, "")
+                if file_name == "":
+                    file_name = project_file_path
+                    project_file_path = ""
+                client_file_path = checked_out_file_info["clientFile"]
+                client_name = checked_out_file_info["client"]
+                user_id = checked_out_file_info["user"]
+                user_name = self.group_members_info_dict[user_id]
+                self.checked_out_files[checked_out_file_count] = {
+                    "FileName": file_name,
+                    "UserName": user_name,
+                    "ClientName": client_name,
+                    "UserId": user_id,
+                    "ProjectFilePath": project_file_path,
+                    "DepotFilePath": depot_file_path,
+                    "ClientFilePath": client_file_path
+                }
+
+            p4.disconnect()
+        except P4Exception as e:
+            log.exception(e)
+        except BaseException as e:
+            log.exception(e)
+        finally:
+            if p4.connected():
+                p4.disconnect()
+
+        return self.checked_out_files
 
 
 class CheckedOutFilesPanel:
     def __init__(self, parent=None, is_open=True):
 
-        self.controller: CheckedOutFilesPanelController = CheckedOutFilesPanelController()
+        self.controller: CheckedOutFilesController = CheckedOutFilesController()
 
         self.window_id = None
         self.uid_column = None
@@ -33,8 +136,7 @@ class CheckedOutFilesPanel:
         self._filter_text_tag = "Checked Out Filter Text Box"
 
         self.checked_out_files = dict()
-        for i in range(10):
-            self.checked_out_files[i] = i
+        self.checked_out_files = self.controller.get_checked_out_files()
 
     def init_ui(self, parent=None, is_open=True):
         if parent:
@@ -63,13 +165,19 @@ class CheckedOutFilesPanel:
             self.uid_column = dpg.add_table_column(label="uID", default_sort=True, prefer_sort_ascending=True, no_clip=True, width_fixed=False)
             self.path_column = dpg.add_table_column(label="Path", default_sort=True, prefer_sort_ascending=True, no_clip=True, width_stretch=False, init_width_or_weight=0.0)
 
-            for i, j in self.checked_out_files.items():
-                with dpg.table_row(filter_key=f"Cell {i}, 1"):
-                    dpg.add_text(f"Cell {i}, 1")
-                    dpg.add_text(f"Cell {i}, 1")
-                    dpg.add_text(f"Cell {i}, 1")
-                    dpg.add_text(f"Cell {i}, 1")
-                    dpg.add_text(f"Cell {i}, 1")
+            for file_count, file_details in self.checked_out_files.items():
+                file_name = file_details["FileName"]
+                user_name = file_details["UserName"]
+                client_name = file_details["ClientName"]
+                user_id = file_details["UserId"]
+                project_file_path = file_details["ProjectFilePath"]
+                filter_key_text = f"{file_name} {user_name} {client_name} {user_id} {project_file_path}"
+                with dpg.table_row(filter_key=filter_key_text):
+                    dpg.add_text(file_name)
+                    dpg.add_text(user_name)
+                    dpg.add_text(client_name)
+                    dpg.add_text(str(user_id))
+                    dpg.add_text(project_file_path)
 
     def sort_callback(self, sender, sort_specs):
         # sort_specs scenarios:
