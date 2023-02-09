@@ -106,6 +106,11 @@ class AppUtilityController(object):
                 if os.path.isdir(os.path.join(directory_path, name))]
 
     @staticmethod
+    def get_files_in_directory(directory_path):
+        return [name for name in os.listdir(directory_path)
+                if os.path.isfile(os.path.join(directory_path, name))]
+
+    @staticmethod
     def make_folder_writable(folder_path):
         for root, sub_dirs, files in os.walk(folder_path):
             for file in files:
@@ -243,6 +248,24 @@ class AppUtilityController(object):
             else:
                 log.warning("Developer Plugin Saved Folder Does Not Exist: " + plugin_saved_path)
 
+    def get_solution_file_list(self):
+        solution_file_path_list = list()
+        file_list = self.get_files_in_directory(self.project_path)
+        for file in file_list:
+            if file.endswith(".sln"):
+                solution_file_path_list.append(os.path.join(self.project_path, file))
+        return solution_file_path_list
+
+    def delete_project_solution_files(self):
+        solution_file_path_list = self.get_solution_file_list()
+        for file_path in solution_file_path_list:
+            solution_file = pathlib.Path(file_path)
+            if solution_file.exists():
+                os.remove(file_path)
+                log.success("Deleted Solution File: " + file_path)
+            else:
+                log.warning("Solution File Does Not Exist: " + file_path)
+                
 
 class AppUtilityUI(threading.Thread):
     __minimum_width__ = 1200
@@ -335,6 +358,14 @@ class AppUtilityUI(threading.Thread):
         self.clear_project_saved_tag = "Delete Project Saved Folder"
         self.clear_plugin_saved_tag = "Delete Plugin Saved Folder"
         self.clear_saved_help_message = "(Delete the Saved Folder and Files)\n"
+
+        # Clear Solution Files
+        self.clear_solution_files_tag = "Clear Solution Files"
+        self.clear_project_solution_files_tree_tag = "Project Solution Files"
+
+        self.clear_project_solution_files_tag = "Delete Project Solution Files"
+        self.clear_solution_files_help_message = "(Delete the Solution Files)\n"
+
         # Checked Out Files
         self.checked_out_files_tag = "Checked Out Files"
 
@@ -449,6 +480,12 @@ class AppUtilityUI(threading.Thread):
         self.app_utility_controller.delete_plugin_saved()
         self.app_utility_controller.delete_developer_plugin_saved()
         dpg.configure_item(self.clear_plugin_saved_tag, show=True)
+
+    def __clear_project_solution_files__(self, sender, data):
+        log.info("User clicked on the Clear Project Solution Files button.")
+        dpg.configure_item(self.clear_project_solution_files_tag, show=False)
+        self.app_utility_controller.delete_project_solution_files()
+        dpg.configure_item(self.clear_project_solution_files_tag, show=True)
 
     def __init_ui__(self):
 
@@ -582,6 +619,16 @@ class AppUtilityUI(threading.Thread):
                     dpg.bind_item_font(dpg.last_item(), default_bold_font)
                     dpg.bind_item_theme(dpg.last_item(), self.red_button_theme_tag)
                     self._help(self.clear_saved_help_message)
+                    dpg.add_separator()
+            # Clear Solution Files
+            with dpg.collapsing_header(label=self.clear_solution_files_tag, tag=self.clear_solution_files_tag, default_open=False):
+                dpg.bind_item_theme(dpg.last_item(), self.red_collapsing_header_theme_tag)
+                with dpg.tree_node(label=self.clear_project_solution_files_tree_tag, tag=self.clear_project_solution_files_tree_tag, default_open=True):
+                    # dpg.add_text("Click the button to delete Project Solution Files.")
+                    dpg.add_button(label=self.clear_project_solution_files_tag, tag=self.clear_project_solution_files_tag, callback=self.__clear_project_solution_files__)
+                    dpg.bind_item_font(dpg.last_item(), default_bold_font)
+                    dpg.bind_item_theme(dpg.last_item(), self.red_button_theme_tag)
+                    self._help(self.clear_solution_files_help_message)
                     dpg.add_separator()
 
         # Log Panel
