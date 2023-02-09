@@ -211,7 +211,7 @@ class AppUtilityUI(threading.Thread):
         dpg.bind_theme(dark_theme_id)
 
         dpg.configure_app(manual_callback_management=sys.flags.dev_mode, docking=True, docking_space=True, init_file="../config/" + ep4c.DPG_INI_FILE_NAME,
-                          load_init_file=True)
+                          load_init_file=True, auto_device=True)
 
         dpg.create_viewport(title=self.viewport_title, width=self.VIEWPORT_WIDTH, height=self.VIEWPORT_HEIGHT)
 
