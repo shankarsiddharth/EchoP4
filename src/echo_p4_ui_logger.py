@@ -1,3 +1,4 @@
+import sys
 import logging
 
 import dearpygui.dearpygui as dpg
@@ -12,6 +13,8 @@ class EchoP4UILogger:
         self.log_level = 0
         self._auto_scroll = True
         self._default_show_all_logs = False
+        if sys.flags.dev_mode:
+            self._default_show_all_logs = True
         self._show_all_logs_tag = "UI Logger Show All Logs"
         self._filter_text_tag = "UI Logger Filter Text Box"
         self.filter_id = None
