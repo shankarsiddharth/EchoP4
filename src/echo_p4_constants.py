@@ -97,15 +97,22 @@ KEY_P4GROUP: str = "p4group"
 
 # ****************************************************************************************************************************************************************
 
-# ========================== START DearPyGUI's Viewport Constants ===================================
+# ========================== START Project FileSystem Constants ===================================
 
-ECHO_P4_TOOL_WINDOW_TITLE: str = "Echo P4 Tool"
-ECHO_P4_COMMAND_WINDOW: str = "Echo P4 Commands"
-FILE_MENU: str = "File"
-SAVE_CURRENT_LAYOUT_TO_DPG_INI: str = "Save Current Layout"
-RESET_TO_DEFAULT_LAYOUT: str = "Reset to Default Layout"
+PROJECT_BINARIES_FOLDER_NAME: str = "Binaries"
+PLUGIN_BINARIES_FOLDER_NAME: str = "Binaries"
+PROJECT_SOURCE_FOLDER_NAME: str = "Source"
+PLUGIN_SOURCE_FOLDER_NAME: str = "Source"
+PROJECT_PLUGINS_FOLDER_NAME: str = "Plugins"
+DEVELOPER_PLUGINS_FOLDER_NAME: str = "Developer"
+PROJECT_INTERMEDIATE_FOLDER_NAME: str = "Intermediate"
+PLUGIN_INTERMEDIATE_FOLDER_NAME: str = "Intermediate"
+PROJECT_SAVED_FOLDER_NAME: str = "Saved"
+PLUGIN_SAVED_FOLDER_NAME: str = "Saved"
+PROJECT_CONFIG_FOLDER_NAME: str = "Config"
+PLUGIN_CONFIG_FOLDER_NAME: str = "Config"
 
-# ========================== END DearPyGUI's Viewport Constants ===================================
+# ========================== END Project FileSystem Constants ===================================
 
 
 # ****************************************************************************************************************************************************************

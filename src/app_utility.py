@@ -2,6 +2,7 @@ import configparser
 import os
 import pathlib
 import platform
+import stat
 import sys
 import threading
 import shutil
@@ -30,6 +31,217 @@ class AppUtilityController(object):
         self.is_load_default_layout_clicked = False
         # is_menu_close_button_clicked = False
         self.is_window_close_button_clicked = False
+
+        self.root_path = p4th.get_root_folder()
+        self.project_path = os.path.dirname(self.root_path)
+
+        self.project_binaries_path = os.path.join(self.project_path, ep4c.PROJECT_BINARIES_FOLDER_NAME)
+        self.project_source_path = os.path.join(self.project_path, ep4c.PROJECT_SOURCE_FOLDER_NAME)
+        self.project_config_path = os.path.join(self.project_path, ep4c.PROJECT_CONFIG_FOLDER_NAME)
+        self.project_intermediate_path = os.path.join(self.project_path, ep4c.PROJECT_INTERMEDIATE_FOLDER_NAME)
+        self.project_saved_path = os.path.join(self.project_path, ep4c.PROJECT_SAVED_FOLDER_NAME)
+        self.project_plugins_path = os.path.join(self.project_path, ep4c.PROJECT_PLUGINS_FOLDER_NAME)
+        self.project_plugins_list = self.get_subdirectories(self.project_plugins_path)
+        if ep4c.DEVELOPER_PLUGINS_FOLDER_NAME in self.project_plugins_list:
+            self.project_plugins_list.remove(ep4c.DEVELOPER_PLUGINS_FOLDER_NAME)
+            self.developer_plugins_path = os.path.join(self.project_plugins_path, ep4c.DEVELOPER_PLUGINS_FOLDER_NAME)
+            self.developer_plugins_list = self.get_subdirectories(self.developer_plugins_path)
+        else:
+            self.developer_plugins_path = None
+            self.developer_plugins_list = list()
+
+        self.project_plugins_binaries_path_list = list()
+        self.project_plugins_source_path_list = list()
+        self.project_plugins_config_path_list = list()
+        self.project_plugins_intermediate_path_list = list()
+        self.project_plugins_saved_path_list = list()
+
+        for plugin_folder in self.project_plugins_list:
+            plugin_path = os.path.join(self.project_plugins_path, plugin_folder)
+            plugin_binaries_path = os.path.join(plugin_path, ep4c.PLUGIN_BINARIES_FOLDER_NAME)
+            self.project_plugins_binaries_path_list.append(plugin_binaries_path)
+            plugin_source_path = os.path.join(plugin_path, ep4c.PLUGIN_SOURCE_FOLDER_NAME)
+            self.project_plugins_source_path_list.append(plugin_source_path)
+            plugin_config_path = os.path.join(plugin_path, ep4c.PLUGIN_CONFIG_FOLDER_NAME)
+            self.project_plugins_config_path_list.append(plugin_config_path)
+            plugin_intermediate_path = os.path.join(plugin_path, ep4c.PLUGIN_INTERMEDIATE_FOLDER_NAME)
+            self.project_plugins_intermediate_path_list.append(plugin_intermediate_path)
+            plugin_saved_path = os.path.join(plugin_path, ep4c.PLUGIN_SAVED_FOLDER_NAME)
+            self.project_plugins_saved_path_list.append(plugin_saved_path)
+
+        # log.trace("Project Plugins Binaries Path List: " + str(self.project_plugins_binaries_path_list))
+        # log.trace("Project Plugins Source Path List: " + str(self.project_plugins_source_path_list))
+        # log.trace("Project Plugins Config Path List: " + str(self.project_plugins_config_path_list))
+        # log.trace("Project Plugins Intermediate Path List: " + str(self.project_plugins_intermediate_path_list))
+        # log.trace("Project Plugins Saved Path List: " + str(self.project_plugins_saved_path_list))
+
+        self.developer_plugins_binaries_path_list = list()
+        self.developer_plugins_source_path_list = list()
+        self.developer_plugins_config_path_list = list()
+        self.developer_plugins_intermediate_path_list = list()
+        self.developer_plugins_saved_path_list = list()
+
+        for developer_plugin in self.developer_plugins_list:
+            developer_plugin_path = os.path.join(self.developer_plugins_path, developer_plugin)
+            developer_plugin_binaries_path = os.path.join(developer_plugin_path, ep4c.PLUGIN_BINARIES_FOLDER_NAME)
+            self.developer_plugins_binaries_path_list.append(developer_plugin_binaries_path)
+            developer_plugin_source_path = os.path.join(developer_plugin_path, ep4c.PLUGIN_SOURCE_FOLDER_NAME)
+            self.developer_plugins_source_path_list.append(developer_plugin_source_path)
+            developer_plugin_config_path = os.path.join(developer_plugin_path, ep4c.PLUGIN_CONFIG_FOLDER_NAME)
+            self.developer_plugins_config_path_list.append(developer_plugin_config_path)
+            developer_plugin_intermediate_path = os.path.join(developer_plugin_path, ep4c.PLUGIN_INTERMEDIATE_FOLDER_NAME)
+            self.developer_plugins_intermediate_path_list.append(developer_plugin_intermediate_path)
+            developer_plugin_saved_path = os.path.join(developer_plugin_path, ep4c.PLUGIN_SAVED_FOLDER_NAME)
+            self.developer_plugins_saved_path_list.append(developer_plugin_saved_path)
+
+        # log.trace("Developer Plugins Binaries Path List: " + str(self.developer_plugins_binaries_path_list))
+        # log.trace("Developer Plugins Source Path List: " + str(self.developer_plugins_source_path_list))
+        # log.trace("Developer Plugins Config Path List: " + str(self.developer_plugins_config_path_list))
+        # log.trace("Developer Plugins Intermediate Path List: " + str(self.developer_plugins_intermediate_path_list))
+        # log.trace("Developer Plugins Saved Path List: " + str(self.developer_plugins_saved_path_list))
+
+    @staticmethod
+    def get_subdirectories(directory_path):
+        return [name for name in os.listdir(directory_path)
+                if os.path.isdir(os.path.join(directory_path, name))]
+
+    @staticmethod
+    def make_folder_writable(folder_path):
+        for root, sub_dirs, files in os.walk(folder_path):
+            for file in files:
+                file_path = os.path.join(root, file)
+                os.chmod(file_path, stat.S_IRWXU)
+                log.trace("Made File Writable: " + file_path)
+
+    def make_project_binaries_writable(self):
+        project_binaries = pathlib.Path(self.project_binaries_path)
+        if project_binaries.exists():
+            self.make_folder_writable(self.project_binaries_path)
+            log.success("Made Project Binaries Writable: " + self.project_binaries_path)
+        else:
+            log.warning("Project Binaries Folder Does Not Exist: " + self.project_binaries_path)
+
+    def make_project_source_writable(self):
+        project_source = pathlib.Path(self.project_source_path)
+        if project_source.exists():
+            self.make_folder_writable(self.project_source_path)
+            log.success("Made Project Source Writable: " + self.project_source_path)
+        else:
+            log.warning("Project Source Folder Does Not Exist: " + self.project_source_path)
+
+    def make_project_plugins_binaries_writable(self):
+        for plugin_binaries_path in self.project_plugins_binaries_path_list:
+            plugin_binaries = pathlib.Path(plugin_binaries_path)
+            if plugin_binaries.exists():
+                self.make_folder_writable(plugin_binaries_path)
+                log.success("Made Project Plugin Binaries Writable: " + plugin_binaries_path)
+            else:
+                log.warning("Project Plugin Binaries Folder Does Not Exist: " + plugin_binaries_path)
+
+    def make_project_plugins_source_writable(self):
+        for plugin_source_path in self.project_plugins_source_path_list:
+            plugin_source = pathlib.Path(plugin_source_path)
+            if plugin_source.exists():
+                self.make_folder_writable(plugin_source_path)
+                log.success("Made Project Plugin Source Writable: " + plugin_source_path)
+            else:
+                log.warning("Project Plugin Source Folder Does Not Exist: " + plugin_source_path)
+
+    def make_developer_plugins_binaries_writable(self):
+        for plugin_binaries_path in self.developer_plugins_binaries_path_list:
+            plugin_binaries = pathlib.Path(plugin_binaries_path)
+            if plugin_binaries.exists():
+                self.make_folder_writable(plugin_binaries_path)
+                log.success("Made Developer Plugin Binaries Writable: " + plugin_binaries_path)
+            else:
+                log.warning("Developer Plugin Binaries Folder Does Not Exist: " + plugin_binaries_path)
+
+    def make_developer_plugins_source_writable(self):
+        for plugin_source_path in self.developer_plugins_source_path_list:
+            plugin_source = pathlib.Path(plugin_source_path)
+            if plugin_source.exists():
+                self.make_folder_writable(plugin_source_path)
+                log.success("Made Developer Plugin Source Writable: " + plugin_source_path)
+            else:
+                log.warning("Developer Plugin Source Folder Does Not Exist: " + plugin_source_path)
+
+    def delete_project_binaries(self):
+        project_binaries = pathlib.Path(self.project_binaries_path)
+        if project_binaries.exists():
+            shutil.rmtree(self.project_binaries_path)
+            log.success("Deleted Project Binaries: " + self.project_binaries_path)
+        else:
+            log.warning("Project Binaries Folder Does Not Exist: " + self.project_binaries_path)
+
+    def delete_project_intermediate(self):
+        project_intermediate = pathlib.Path(self.project_intermediate_path)
+        if project_intermediate.exists():
+            shutil.rmtree(self.project_intermediate_path)
+            log.success("Deleted Project Intermediate: " + self.project_intermediate_path)
+        else:
+            log.warning("Project Intermediate Folder Does Not Exist: " + self.project_intermediate_path)
+
+    def delete_project_saved(self):
+        project_saved = pathlib.Path(self.project_saved_path)
+        if project_saved.exists():
+            shutil.rmtree(self.project_saved_path)
+            log.success("Deleted Project Saved: " + self.project_saved_path)
+        else:
+            log.warning("Project Saved Folder Does Not Exist: " + self.project_saved_path)
+
+    def delete_plugin_binaries(self):
+        for plugin_binaries_path in self.project_plugins_binaries_path_list:
+            plugin_binaries = pathlib.Path(plugin_binaries_path)
+            if plugin_binaries.exists():
+                shutil.rmtree(plugin_binaries_path)
+                log.success("Deleted Plugin Binaries: " + plugin_binaries_path)
+            else:
+                log.warning("Plugin Binaries Folder Does Not Exist: " + plugin_binaries_path)
+
+    def delete_plugin_intermediate(self):
+        for plugin_intermediate_path in self.project_plugins_intermediate_path_list:
+            plugin_intermediate = pathlib.Path(plugin_intermediate_path)
+            if plugin_intermediate.exists():
+                shutil.rmtree(plugin_intermediate_path)
+                log.success("Deleted Plugin Intermediate: " + plugin_intermediate_path)
+            else:
+                log.warning("Plugin Intermediate Folder Does Not Exist: " + plugin_intermediate_path)
+
+    def delete_plugin_saved(self):
+        for plugin_saved_path in self.project_plugins_saved_path_list:
+            plugin_saved = pathlib.Path(plugin_saved_path)
+            if plugin_saved.exists():
+                shutil.rmtree(plugin_saved_path)
+                log.success("Deleted Plugin Saved: " + plugin_saved_path)
+            else:
+                log.warning("Plugin Saved Folder Does Not Exist: " + plugin_saved_path)
+
+    def delete_developer_plugin_binaries(self):
+        for plugin_binaries_path in self.developer_plugins_binaries_path_list:
+            plugin_binaries = pathlib.Path(plugin_binaries_path)
+            if plugin_binaries.exists():
+                shutil.rmtree(plugin_binaries_path)
+                log.success("Deleted Developer Plugin Binaries: " + plugin_binaries_path)
+            else:
+                log.warning("Developer Plugin Binaries Folder Does Not Exist: " + plugin_binaries_path)
+
+    def delete_developer_plugin_intermediate(self):
+        for plugin_intermediate_path in self.developer_plugins_intermediate_path_list:
+            plugin_intermediate = pathlib.Path(plugin_intermediate_path)
+            if plugin_intermediate.exists():
+                shutil.rmtree(plugin_intermediate_path)
+                log.success("Deleted Developer Plugin Intermediate: " + plugin_intermediate_path)
+            else:
+                log.warning("Developer Plugin Intermediate Folder Does Not Exist: " + plugin_intermediate_path)
+
+    def delete_developer_plugin_saved(self):
+        for plugin_saved_path in self.developer_plugins_saved_path_list:
+            plugin_saved = pathlib.Path(plugin_saved_path)
+            if plugin_saved.exists():
+                shutil.rmtree(plugin_saved_path)
+                log.success("Deleted Developer Plugin Saved: " + plugin_saved_path)
+            else:
+                log.warning("Developer Plugin Saved Folder Does Not Exist: " + plugin_saved_path)
 
 
 class AppUtilityUI(threading.Thread):
@@ -81,6 +293,7 @@ class AppUtilityUI(threading.Thread):
 
         # Theme
         self.red_button_theme_tag = "Red Button Theme"
+        self.red_collapsing_header_theme_tag = "Red Collapsing Header Theme"
 
         # ***** Command Window ***** #
         # Make Writable
@@ -95,6 +308,16 @@ class AppUtilityUI(threading.Thread):
         self.make_project_source_writable_tag = "Project Source (Make Files Writable)"
         self.make_plugin_source_writable_tag = "Plugin Source (Make Files Writable)"
         self.make_writable_help_message = "(Remove Read-Only Flag/Attribute)\n"
+
+        # Clear Binaries
+        self.clear_binaries_tag = "Clear Binaries"
+        self.clear_project_binaries_tree_tag = "Project Binaries "  # Space at the end is intentional to avoid conflict with the "Project Binaries" tag
+        self.clear_plugin_binaries_tree_tag = "Plugin Binaries "  # Space at the end is intentional to avoid conflict with the "Plugin Binaries" tag
+
+        self.clear_project_binaries_tag = "Delete Project Binaries Folder"
+        self.clear_plugin_binaries_tag = "Delete Plugin Binaries Folder"
+        self.clear_binaries_help_message = "(Delete the Binaries Folder and Files)\n"
+
         # Clear Intermediate
         self.clear_intermediate_tag = "Clear Intermediate"
         self.clear_project_intermediate_tree_tag = "Project Intermediate"
@@ -103,6 +326,7 @@ class AppUtilityUI(threading.Thread):
         self.clear_project_intermediate_tag = "Delete Project Intermediate Folder"
         self.clear_plugin_intermediate_tag = "Delete Plugin Intermediate Folder"
         self.clear_intermediate_help_message = "(Delete the Intermediate Folder and Files)\n"
+
         # Clear Saved
         self.clear_saved_tag = "Clear Saved"
         self.clear_project_saved_tree_tag = "Project Saved"
@@ -162,43 +386,69 @@ class AppUtilityUI(threading.Thread):
 
     def __make_project_binaries_writable__(self, sender, data):
         log.info("User clicked on the Make Project Binaries Writable button.")
-
-        pass
+        dpg.configure_item(self.make_project_binaries_writable_tag, show=False)
+        self.app_utility_controller.make_project_binaries_writable()
+        dpg.configure_item(self.make_project_binaries_writable_tag, show=True)
 
     def __make_plugin_binaries_writable__(self, sender, data):
         log.info("User clicked on the Make Plugin Binaries Writable button.")
-
+        dpg.configure_item(self.make_plugin_binaries_writable_tag, show=False)
+        self.app_utility_controller.make_project_plugins_binaries_writable()
+        self.app_utility_controller.make_developer_plugins_binaries_writable()
+        dpg.configure_item(self.make_plugin_binaries_writable_tag, show=True)
         pass
 
     def __make_project_source_writable__(self, sender, data):
         log.info("User clicked on the Make Project Source Writable button.")
-
-        pass
+        dpg.configure_item(self.make_project_source_writable_tag, show=False)
+        self.app_utility_controller.make_project_source_writable()
+        dpg.configure_item(self.make_project_source_writable_tag, show=True)
 
     def __make_plugin_source_writable__(self, sender, data):
         log.info("User clicked on the Make Plugin Source Writable button.")
+        dpg.configure_item(self.make_plugin_source_writable_tag, show=False)
+        self.app_utility_controller.make_project_plugins_source_writable()
+        self.app_utility_controller.make_developer_plugins_source_writable()
+        dpg.configure_item(self.make_plugin_source_writable_tag, show=True)
 
-        pass
+    def __clear_project_binaries__(self, sender, data):
+        log.info("User clicked on the Clear Project Binaries button.")
+        dpg.configure_item(self.clear_project_binaries_tag, show=False)
+        self.app_utility_controller.delete_project_binaries()
+        dpg.configure_item(self.clear_project_binaries_tag, show=True)
+
+    def __clear_plugin_binaries__(self, sender, data):
+        log.info("User clicked on the Clear Plugin Binaries button.")
+        dpg.configure_item(self.clear_plugin_binaries_tag, show=False)
+        self.app_utility_controller.delete_plugin_binaries()
+        self.app_utility_controller.delete_developer_plugin_binaries()
+        dpg.configure_item(self.clear_plugin_binaries_tag, show=True)
 
     def __clear_project_intermediate__(self, sender, data):
         log.info("User clicked on the Clear Project Intermediate button.")
-
-        pass
+        dpg.configure_item(self.clear_project_intermediate_tag, show=False)
+        self.app_utility_controller.delete_project_intermediate()
+        dpg.configure_item(self.clear_project_intermediate_tag, show=True)
 
     def __clear_plugin_intermediate__(self, sender, data):
         log.info("User clicked on the Clear Plugin Intermediate button.")
-
-        pass
+        dpg.configure_item(self.clear_plugin_intermediate_tag, show=False)
+        self.app_utility_controller.delete_plugin_intermediate()
+        self.app_utility_controller.delete_developer_plugin_intermediate()
+        dpg.configure_item(self.clear_plugin_intermediate_tag, show=True)
 
     def __clear_project_saved__(self, sender, data):
         log.info("User clicked on the Clear Project Saved button.")
-
-        pass
+        dpg.configure_item(self.clear_project_saved_tag, show=False)
+        self.app_utility_controller.delete_project_saved()
+        dpg.configure_item(self.clear_project_saved_tag, show=True)
 
     def __clear_plugin_saved__(self, sender, data):
         log.info("User clicked on the Clear Plugin Saved button.")
-
-        pass
+        dpg.configure_item(self.clear_plugin_saved_tag, show=False)
+        self.app_utility_controller.delete_plugin_saved()
+        self.app_utility_controller.delete_developer_plugin_saved()
+        dpg.configure_item(self.clear_plugin_saved_tag, show=True)
 
     def __init_ui__(self):
 
@@ -223,6 +473,12 @@ class AppUtilityUI(threading.Thread):
                 dpg.add_theme_color(dpg.mvThemeCol_Button, (200, 0, 0, 255))
                 dpg.add_theme_color(dpg.mvThemeCol_ButtonActive, (178, 34, 34, 255))
                 dpg.add_theme_color(dpg.mvThemeCol_ButtonHovered, (220, 20, 60, 255))
+
+        with dpg.theme(tag=self.red_collapsing_header_theme_tag):
+            with dpg.theme_component(dpg.mvCollapsingHeader):
+                dpg.add_theme_color(dpg.mvThemeCol_Header, (200, 0, 0, 255))
+                dpg.add_theme_color(dpg.mvThemeCol_HeaderHovered, (178, 34, 34, 255))
+                dpg.add_theme_color(dpg.mvThemeCol_HeaderActive, (220, 20, 60, 255))
 
         # add a font registry
         with dpg.font_registry():
@@ -253,56 +509,75 @@ class AppUtilityUI(threading.Thread):
             # Make Files Writable
             with dpg.collapsing_header(label=self.make_writable_tag, tag=self.make_writable_tag, default_open=True):
                 with dpg.tree_node(label=self.make_writable_project_binaries_tree_tag, tag=self.make_writable_project_binaries_tree_tag, default_open=True):
-                    dpg.add_text("Click the button to make all the files in the Project Binaries folder writable.")
+                    # dpg.add_text("Click the button to make all the files in the Project Binaries folder writable.")
                     dpg.add_button(label=self.make_project_binaries_writable_tag, tag=self.make_project_binaries_writable_tag, callback=self.__make_project_binaries_writable__)
                     dpg.bind_item_font(dpg.last_item(), default_bold_font)
                     self._help(self.make_writable_help_message)
                     dpg.add_separator()
                 with dpg.tree_node(label=self.make_writable_plugin_binaries_tree_tag, tag=self.make_writable_plugin_binaries_tree_tag, default_open=True):
-                    dpg.add_text("Click the button to make all the files in the Plugin Binaries folder writable.")
+                    # dpg.add_text("Click the button to make all the files in the Plugin Binaries folder writable.")
                     dpg.add_button(label=self.make_plugin_binaries_writable_tag, tag=self.make_plugin_binaries_writable_tag, callback=self.__make_plugin_binaries_writable__)
                     dpg.bind_item_font(dpg.last_item(), default_bold_font)
                     self._help(self.make_writable_help_message)
                     dpg.add_separator()
                 with dpg.tree_node(label=self.make_writable_project_source_tree_tag, tag=self.make_writable_project_source_tree_tag, default_open=True):
-                    dpg.add_text("Click the button to make all the files in the Project Source folder writable.")
+                    # dpg.add_text("Click the button to make all the files in the Project Source folder writable.")
                     dpg.add_button(label=self.make_project_source_writable_tag, tag=self.make_project_source_writable_tag, callback=self.__make_project_source_writable__)
                     dpg.bind_item_font(dpg.last_item(), default_bold_font)
                     self._help(self.make_writable_help_message)
                     dpg.add_separator()
                 with dpg.tree_node(label=self.make_writable_plugin_source_tree_tag, tag=self.make_writable_plugin_source_tree_tag, default_open=True):
-                    dpg.add_text("Click the button to make all the files in the Plugin Source folder writable.")
+                    # dpg.add_text("Click the button to make all the files in the Plugin Source folder writable.")
                     dpg.add_button(label=self.make_plugin_source_writable_tag, tag=self.make_plugin_source_writable_tag, callback=self.__make_plugin_source_writable__)
                     dpg.bind_item_font(dpg.last_item(), default_bold_font)
                     self._help(self.make_writable_help_message)
                     dpg.add_separator()
+            # Clear Binaries
+            with dpg.collapsing_header(label=self.clear_binaries_tag, tag=self.clear_binaries_tag, default_open=False):
+                dpg.bind_item_theme(dpg.last_item(), self.red_collapsing_header_theme_tag)
+                with dpg.tree_node(label=self.clear_project_binaries_tree_tag, tag=self.clear_project_binaries_tree_tag, default_open=True):
+                    # dpg.add_text("Click the button to delete Project Binaries folder.")
+                    dpg.add_button(label=self.clear_project_binaries_tag, tag=self.clear_project_binaries_tag, callback=self.__clear_project_binaries__)
+                    dpg.bind_item_font(dpg.last_item(), default_bold_font)
+                    dpg.bind_item_theme(dpg.last_item(), self.red_button_theme_tag)
+                    self._help(self.clear_binaries_help_message)
+                    dpg.add_separator()
+                with dpg.tree_node(label=self.clear_plugin_binaries_tree_tag, tag=self.clear_plugin_binaries_tree_tag, default_open=True):
+                    # dpg.add_text("Click the button to delete Plugin Binaries folder.")
+                    dpg.add_button(label=self.clear_plugin_binaries_tag, tag=self.clear_plugin_binaries_tag, callback=self.__clear_plugin_binaries__)
+                    dpg.bind_item_font(dpg.last_item(), default_bold_font)
+                    dpg.bind_item_theme(dpg.last_item(), self.red_button_theme_tag)
+                    self._help(self.clear_binaries_help_message)
+                    dpg.add_separator()
             # Clear Intermediate
-            with dpg.collapsing_header(label=self.clear_intermediate_tag, tag=self.clear_intermediate_tag, default_open=True):
+            with dpg.collapsing_header(label=self.clear_intermediate_tag, tag=self.clear_intermediate_tag, default_open=False):
+                dpg.bind_item_theme(dpg.last_item(), self.red_collapsing_header_theme_tag)
                 with dpg.tree_node(label=self.clear_project_intermediate_tree_tag, tag=self.clear_project_intermediate_tree_tag, default_open=True):
-                    dpg.add_text("Click the button to delete Project Intermediate folder.")
+                    # dpg.add_text("Click the button to delete Project Intermediate folder.")
                     dpg.add_button(label=self.clear_project_intermediate_tag, tag=self.clear_project_intermediate_tag, callback=self.__clear_project_intermediate__)
                     dpg.bind_item_font(dpg.last_item(), default_bold_font)
                     dpg.bind_item_theme(dpg.last_item(), self.red_button_theme_tag)
                     self._help(self.clear_intermediate_help_message)
                     dpg.add_separator()
                 with dpg.tree_node(label=self.clear_plugin_intermediate_tree_tag, tag=self.clear_plugin_intermediate_tree_tag, default_open=True):
-                    dpg.add_text("Click the button to delete Plugin Intermediate folder.")
+                    # dpg.add_text("Click the button to delete Plugin Intermediate folder.")
                     dpg.add_button(label=self.clear_plugin_intermediate_tag, tag=self.clear_plugin_intermediate_tag, callback=self.__clear_plugin_intermediate__)
                     dpg.bind_item_font(dpg.last_item(), default_bold_font)
                     dpg.bind_item_theme(dpg.last_item(), self.red_button_theme_tag)
                     self._help(self.clear_intermediate_help_message)
                     dpg.add_separator()
             # Clear Saved
-            with dpg.collapsing_header(label=self.clear_saved_tag, tag=self.clear_saved_tag, default_open=True):
+            with dpg.collapsing_header(label=self.clear_saved_tag, tag=self.clear_saved_tag, default_open=False):
+                dpg.bind_item_theme(dpg.last_item(), self.red_collapsing_header_theme_tag)
                 with dpg.tree_node(label=self.clear_project_saved_tree_tag, tag=self.clear_project_saved_tree_tag, default_open=True):
-                    dpg.add_text("Click the button to delete Project Saved folder.")
+                    # dpg.add_text("Click the button to delete Project Saved folder.")
                     dpg.add_button(label=self.clear_project_saved_tag, tag=self.clear_project_saved_tag, callback=self.__clear_project_saved__)
                     dpg.bind_item_font(dpg.last_item(), default_bold_font)
                     dpg.bind_item_theme(dpg.last_item(), self.red_button_theme_tag)
                     self._help(self.clear_saved_help_message)
                     dpg.add_separator()
                 with dpg.tree_node(label=self.clear_plugin_saved_tree_tag, tag=self.clear_plugin_saved_tree_tag, default_open=True):
-                    dpg.add_text("Click the button to delete Plugin Saved folder.")
+                    # dpg.add_text("Click the button to delete Plugin Saved folder.")
                     dpg.add_button(label=self.clear_plugin_saved_tag, tag=self.clear_plugin_saved_tag, callback=self.__clear_plugin_saved__)
                     dpg.bind_item_font(dpg.last_item(), default_bold_font)
                     dpg.bind_item_theme(dpg.last_item(), self.red_button_theme_tag)
