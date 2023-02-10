@@ -152,9 +152,13 @@ class EchoP4Config(object):
             raise AppError(exception_message)
         line_number = 0
         for line in default_xml_file_lines:
+            if str(line.strip()).startswith("<Command>") and p4th.EXECUTABLE_PATH is not None:
+                self.log.info("Replacing Command for the P4 Custom Tool in the XML file...")
+                default_xml_file_lines[line_number] = "            <Command>" + str(p4th.EXECUTABLE_PATH) + "</Command>\n"
+                self.log.info("Replaced the Command for the P4 Custom Tool in the XML file.")
             if str(line.strip()).startswith("<InitDir>"):
                 self.log.info("Replacing Start Directory for the P4 Custom Tool in the XML file...")
-                default_xml_file_lines[line_number] = "   <InitDir>" + str(root_folder) + "</InitDir>\n"
+                default_xml_file_lines[line_number] = "            <InitDir>" + str(root_folder) + "</InitDir>\n"
                 self.log.info("Replaced the Start Directory for the P4 Custom Tool in the XML file.")
             line_number += 1
         self.log.info("Writing User's P4 Custom Tool XML file...")

@@ -19,10 +19,14 @@ DEFAULT_FONT_SIZE = 18
 DEFAULT_BOLD_FONT_NAME = "OpenSans-Bold.ttf"
 DEFAULT_BOLD_FONT_SIZE = 16
 
+EXECUTABLE_PATH = None
+
 
 def get_root_folder():
+    global EXECUTABLE_PATH
     application_path = ""
     if getattr(sys, 'frozen', False):
+        EXECUTABLE_PATH = os.path.realpath(sys.executable)
         application_path = os.path.dirname(sys.executable)
     elif __file__:
         application_path = os.path.dirname(__file__)
@@ -207,6 +211,13 @@ def reset_user_data():
         dpg_ini_file = pathlib.Path(dpg_ini_file_path)
         if dpg_ini_file.exists():
             os.remove(dpg_ini_file_path)
+    # Delete Tools XML file
+    tools_folder_path = os.path.join(root_folder, ep4c.TOOLS_FOLDER_NAME)
+    tools_xml_file_path = os.path.join(tools_folder_path, ep4c.P4_CUSTOM_TOOLS_XML_FILE_NAME)
+    if tools_xml_file_path is not None and tools_xml_file_path != '':
+        tools_xml_file = pathlib.Path(tools_xml_file_path)
+        if tools_xml_file.exists():
+            os.remove(tools_xml_file_path)
 
 
 def get_dpg_ini_file_path():
@@ -258,4 +269,3 @@ def get_default_bold_font_file_path():
 
 def get_bold_default_font_size():
     return DEFAULT_BOLD_FONT_SIZE
-
