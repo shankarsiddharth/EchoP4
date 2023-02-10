@@ -193,10 +193,13 @@ def reset_user_data():
     # Delete the key file
     delete_key()
     # Delete DPG ini file
-    dpg_ini_file_path = get_dpg_ini_file_path()
-    dpg_ini_file = pathlib.Path(dpg_ini_file_path)
-    if dpg_ini_file.exists():
-        os.remove(dpg_ini_file_path)
+    root_folder = get_root_folder()
+    config_folder_path = os.path.join(root_folder, ep4c.CONFIG_FOLDER_NAME)
+    dpg_ini_file_path = os.path.join(config_folder_path, ep4c.DPG_INI_FILE_NAME)
+    if dpg_ini_file_path is not None and dpg_ini_file_path != '':
+        dpg_ini_file = pathlib.Path(dpg_ini_file_path)
+        if dpg_ini_file.exists():
+            os.remove(dpg_ini_file_path)
 
 
 def get_dpg_ini_file_path():

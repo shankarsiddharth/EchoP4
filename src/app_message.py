@@ -64,6 +64,7 @@ class AppMessageUI(object):
         self.close_ui()
 
     def __reset_data_button_clicked__(self, sender, data):
+        dpg.configure_item(self.close_button_tag, show=False)
         exception_message = ''
         dpg.configure_item(self.user_message_text_tag, default_value="Trying to reset user data...")
         dpg.configure_item(self.reset_data_button_tag, show=False)
@@ -76,6 +77,8 @@ class AppMessageUI(object):
             exception_message = f"An error occurred while trying to reset the user data. \n Error: {e}"
             dpg.configure_item(self.user_message_text_tag, default_value=exception_message)
             return
+        finally:
+            dpg.configure_item(self.close_button_tag, show=True)
         if exception_message == '':
             dpg.configure_item(self.user_message_text_tag, default_value="User data has been reset.\nPlease restart the application.")
 

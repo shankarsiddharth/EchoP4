@@ -48,17 +48,20 @@ class ApplicationInitialSetup(object):
             log.info("P4 Config file found.")
             user_p4_config = P4Config()
             is_login_success = user_p4_config.p4_login(user_p4_config_data=self.user_p4_config_data)
-            while not is_login_success:
-                log.info("P4 login failed with the saved data.")
-                user_p4_config.delete_user_p4_config_file()
-                p4th.delete_key()
-                log.info("Resetting the application config file...")
-                self.user_echo_p4_config = EchoP4Config()
-                self.user_echo_p4_config_data = p4th.get_user_echo_p4_config_data()
-                log.info("Trying to create a new P4 config file for the current user...")
-                user_p4_config = P4Config(user_echo_p4_config_data=self.user_echo_p4_config_data)
-                self.user_p4_config_data = p4th.get_user_p4_config_data()
-                is_login_success = user_p4_config.p4_login(user_p4_config_data=self.user_p4_config_data)
+            if not is_login_success:
+                user_message = "P4 login failed with the saved data.\nReset the User Data, re-open the application and try again."
+                raise AppError(user_message, should_reset_data=True)
+            # while not is_login_success:
+            #     log.info("P4 login failed with the saved data.")
+            #     user_p4_config.delete_user_p4_config_file()
+            #     p4th.delete_key()
+            #     log.info("Resetting the application config file...")
+            #     self.user_echo_p4_config = EchoP4Config()
+            #     self.user_echo_p4_config_data = p4th.get_user_echo_p4_config_data()
+            #     log.info("Trying to create a new P4 config file for the current user...")
+            #     user_p4_config = P4Config(user_echo_p4_config_data=self.user_echo_p4_config_data)
+            #     self.user_p4_config_data = p4th.get_user_p4_config_data()
+            #     is_login_success = user_p4_config.p4_login(user_p4_config_data=self.user_p4_config_data)
 
         log.info('User Login Successful.')
 
