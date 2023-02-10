@@ -1,3 +1,8 @@
+# File Version Constants
+KEY_ECHO_P4_VERSION: str = "ECHO_P4_VERSION"
+KEY_P4_CONFIG_VERSION: str = "P4_CONFIG_VERSION"
+KEY_P4_GROUP_CONFIG_VERSION: str = "P4_GROUP_CONFIG_VERSION"
+
 # Constants
 
 # ========================== START Application Constants ===================================

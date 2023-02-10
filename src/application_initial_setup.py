@@ -42,6 +42,10 @@ class ApplicationInitialSetup(object):
     def check_user_p4_config(self):
         if self.user_p4_config_data is None:
             log.info("No P4 config file found.")
+            if p4th.get_key() is not None:
+                log.info("Previous Key found. Clearing the previous key...")
+                p4th.delete_key()
+                log.info("Previous Key cleared.")
             log.info("Trying to create a new P4 config file for the current user...")
             self.user_p4_config = P4Config(user_echo_p4_config_data=self.user_echo_p4_config_data)
             self.user_p4_config_data = p4th.get_user_p4_config_data()

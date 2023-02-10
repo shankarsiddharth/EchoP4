@@ -35,6 +35,7 @@ class AppUtilityController(object):
 
         self.should_clear_project_saved = False
 
+        # TODO: Refresh the following data for every command button action in the UI
         self.root_path = p4th.get_root_folder()
         self.project_path = os.path.dirname(self.root_path)
 

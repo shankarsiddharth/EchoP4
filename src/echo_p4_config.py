@@ -86,7 +86,9 @@ class EchoP4Config(object):
         echo_p4_user_config.read(default_echo_p4_ini_file_path)
 
         self.log.info("Populating values for key from default echo p4 config file...")
+        echo_p4_config_file_version_number = echo_p4_user_config[ep4c.ECHO_P4_CONFIG_SECTION][ep4c.KEY_ECHO_P4_VERSION]
         echo_p4_user_config[ep4c.ECHO_P4_CONFIG_SECTION] = {}
+        echo_p4_user_config[ep4c.ECHO_P4_CONFIG_SECTION][ep4c.KEY_ECHO_P4_VERSION] = echo_p4_config_file_version_number
         echo_p4_user_config[ep4c.ECHO_P4_CONFIG_SECTION][ep4c.KEY_BINARY_FOLDER_PATH] = str(binary_folder_path)
         echo_p4_user_config[ep4c.ECHO_P4_CONFIG_SECTION][ep4c.KEY_CONFIG_FOLDER_PATH] = str(config_folder_path)
         echo_p4_user_config[ep4c.ECHO_P4_CONFIG_SECTION][ep4c.KEY_CONFIG_DEFAULTS_FOLDER_PATH] = str(config_defaults_folder_path)
