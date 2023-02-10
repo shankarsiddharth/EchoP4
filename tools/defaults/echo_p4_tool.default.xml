@@ -3,7 +3,7 @@
 <CustomToolDefList varName="customtooldeflist">
     <CustomToolDef>
         <Definition>
-            <Name>EchoP4Tool</Name>
+            <Name>EchoP4</Name>
             <Command>P4TOOLS_EXE_PATH</Command>
             <Arguments></Arguments>
             <Shortcut></Shortcut>

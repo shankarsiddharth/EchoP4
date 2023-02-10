@@ -104,13 +104,21 @@ class AppUtilityController(object):
 
     @staticmethod
     def get_subdirectories(directory_path):
-        return [name for name in os.listdir(directory_path)
-                if os.path.isdir(os.path.join(directory_path, name))]
+        directory_object = pathlib.Path(directory_path)
+        if directory_object.exists():
+            return [name for name in os.listdir(directory_path)
+                    if os.path.isdir(os.path.join(directory_path, name))]
+        else:
+            return list()
 
     @staticmethod
     def get_files_in_directory(directory_path):
-        return [name for name in os.listdir(directory_path)
-                if os.path.isfile(os.path.join(directory_path, name))]
+        directory_object = pathlib.Path(directory_path)
+        if directory_object.exists():
+            return [name for name in os.listdir(directory_path)
+                    if os.path.isfile(os.path.join(directory_path, name))]
+        else:
+            return list()
 
     @staticmethod
     def make_folder_writable(folder_path):
