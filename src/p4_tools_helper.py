@@ -19,14 +19,14 @@ DEFAULT_FONT_SIZE = 18
 DEFAULT_BOLD_FONT_NAME = "OpenSans-Bold.ttf"
 DEFAULT_BOLD_FONT_SIZE = 16
 
-EXECUTABLE_PATH = None
+__EXECUTABLE_PATH__ = None
 
 
 def get_root_folder():
-    global EXECUTABLE_PATH
+    global __EXECUTABLE_PATH__
     application_path = ""
     if getattr(sys, 'frozen', False):
-        EXECUTABLE_PATH = os.path.realpath(sys.executable)
+        __EXECUTABLE_PATH__ = os.path.realpath(sys.executable)
         application_path = os.path.dirname(sys.executable)
     elif __file__:
         application_path = os.path.dirname(__file__)
@@ -34,6 +34,11 @@ def get_root_folder():
     bin_src_folder = application_path
     root_folder_path = os.path.dirname(bin_src_folder)
     return root_folder_path
+
+
+def get_executable_path():
+    global __EXECUTABLE_PATH__
+    return __EXECUTABLE_PATH__
 
 
 def get_user_echo_p4_config_file_path():
@@ -221,6 +226,31 @@ def reset_user_data():
 
 
 def get_dpg_ini_file_path():
+    root_folder = get_root_folder()
+    config_folder_path = os.path.join(root_folder, ep4c.CONFIG_FOLDER_NAME)
+    dpg_ini_file_path = os.path.join(config_folder_path, ep4c.DPG_INI_FILE_NAME)
+    dpg_ini_file = pathlib.Path(dpg_ini_file_path)
+    if dpg_ini_file.exists():
+        return dpg_ini_file_path
+    else:
+        default_dpg_ini_file_path = get_default_dpg_ini_file_path()
+        if default_dpg_ini_file_path is not None and default_dpg_ini_file_path != '':
+            shutil.copy(default_dpg_ini_file_path, dpg_ini_file_path)
+            return dpg_ini_file_path
+    return ''
+
+
+def get_default_dpg_ini_file_path():
+    root_folder = get_root_folder()
+    config_folder_path = os.path.join(root_folder, ep4c.CONFIG_FOLDER_NAME)
+    default_dpg_ini_file_path = os.path.join(config_folder_path, ep4c.CONFIG_DEFAULTS_FOLDER_NAME, ep4c.DEFAULT_DPG_INI_FILE_NAME)
+    default_dpg_ini_file = pathlib.Path(default_dpg_ini_file_path)
+    if default_dpg_ini_file.exists():
+        return default_dpg_ini_file_path
+    return ''
+
+
+def get_dpg_ini_file_path_from_config():
     user_echo_p4_config = get_user_echo_p4_config_data()
     if user_echo_p4_config is None:
         return ''
@@ -228,7 +258,7 @@ def get_dpg_ini_file_path():
     return dpg_ini_file_path
 
 
-def get_default_dpg_ini_file_path():
+def get_default_dpg_ini_file_path_from_config():
     user_echo_p4_config = get_user_echo_p4_config_data()
     if user_echo_p4_config is None:
         return ''
@@ -269,3 +299,31 @@ def get_default_bold_font_file_path():
 
 def get_bold_default_font_size():
     return DEFAULT_BOLD_FONT_SIZE
+
+
+def is_user_tools_xml_file_present():
+    root_folder = get_root_folder()
+    tools_folder_path = os.path.join(root_folder, ep4c.TOOLS_FOLDER_NAME)
+    user_tools_xml_file_path = os.path.join(tools_folder_path, ep4c.P4_CUSTOM_TOOLS_XML_FILE_NAME)
+    user_tools_xml_file = pathlib.Path(user_tools_xml_file_path)
+    if user_tools_xml_file.exists():
+        return True
+    return False
+
+
+def get_default_tools_xml_file_path():
+    root_folder = get_root_folder()
+    tools_folder_path = os.path.join(root_folder, ep4c.TOOLS_FOLDER_NAME)
+    defaults_tools_folder_path = os.path.join(tools_folder_path, ep4c.TOOLS_DEFAULTS_FOLDER_NAME)
+    default_tools_xml_file_path = os.path.join(defaults_tools_folder_path, ep4c.DEFAULT_P4_CUSTOM_TOOLS_XML_FILE_NAME)
+    default_tools_xml_file = pathlib.Path(default_tools_xml_file_path)
+    if default_tools_xml_file.exists():
+        return default_tools_xml_file_path
+    return ''
+
+
+def get_user_tools_xml_file_path():
+    root_folder = get_root_folder()
+    tools_folder_path = os.path.join(root_folder, ep4c.TOOLS_FOLDER_NAME)
+    user_tools_xml_file_path = os.path.join(tools_folder_path, ep4c.P4_CUSTOM_TOOLS_XML_FILE_NAME)
+    return user_tools_xml_file_path

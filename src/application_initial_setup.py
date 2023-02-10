@@ -1,3 +1,4 @@
+import shutil
 import sys
 
 import p4_tools_helper as p4th
@@ -23,6 +24,7 @@ class ApplicationInitialSetup(object):
         self.user_p4_group_config_data = p4th.get_user_p4_group_config_data()
 
         self.check_user_echo_p4_config()
+        self.check_tools_xml_file()
         self.check_user_p4_config()
         self.check_user_p4_group_config()
         self.check_group_member_data()
@@ -100,3 +102,12 @@ class ApplicationInitialSetup(object):
             self.check_user_p4_group_config()
         log.info("Group info and Group members info found.")
         pass
+
+    def check_tools_xml_file(self):
+        if not p4th.is_user_tools_xml_file_present():
+            log.info("User Tools XML file not found.")
+            log.info("Trying to create a new Tools XML file for the current user...")
+            root_folder = p4th.get_root_folder()
+            default_p4_custom_tools_xml_file_path = p4th.get_default_tools_xml_file_path()
+            p4_custom_tools_xml_file_path = p4th.get_user_tools_xml_file_path()
+            self.user_echo_p4_config.process_tools_xml_file(default_p4_custom_tools_xml_file_path, p4_custom_tools_xml_file_path, root_folder)

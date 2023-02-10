@@ -142,6 +142,11 @@ class EchoP4Config(object):
         shutil.copyfile(default_dpg_ini_file_path, dpg_ini_file_path)
         self.log.info("DearPyGUI ini config file written.")
 
+        self.process_tools_xml_file(default_p4_custom_tools_xml_file_path, p4_custom_tools_xml_file_path, root_folder)
+
+        self.log.info("Initial Setup Completed.")
+
+    def process_tools_xml_file(self, default_p4_custom_tools_xml_file_path, p4_custom_tools_xml_file_path, root_folder):
         # Read the Default P4 Custom Tool XML file
         self.log.info("Reading Default P4 Custom Tool XML file...")
         default_xml_file_lines = list()
@@ -152,9 +157,10 @@ class EchoP4Config(object):
             raise AppError(exception_message)
         line_number = 0
         for line in default_xml_file_lines:
-            if str(line.strip()).startswith("<Command>") and p4th.EXECUTABLE_PATH is not None:
+            executable_path = p4th.get_executable_path()
+            if str(line.strip()).startswith("<Command>") and executable_path is not None:
                 self.log.info("Replacing Command for the P4 Custom Tool in the XML file...")
-                default_xml_file_lines[line_number] = "            <Command>" + str(p4th.EXECUTABLE_PATH) + "</Command>\n"
+                default_xml_file_lines[line_number] = "            <Command>" + str(executable_path) + "</Command>\n"
                 self.log.info("Replaced the Command for the P4 Custom Tool in the XML file.")
             if str(line.strip()).startswith("<InitDir>"):
                 self.log.info("Replacing Start Directory for the P4 Custom Tool in the XML file...")
@@ -166,5 +172,3 @@ class EchoP4Config(object):
             for line in default_xml_file_lines:
                 xml_file.write(f"{line}")
         self.log.info("User's P4 Custom Tool XML file written.")
-
-        self.log.info("Initial Setup Completed.")
