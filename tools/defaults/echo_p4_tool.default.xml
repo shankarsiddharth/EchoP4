@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--perforce-xml-version=1.0-->
 <CustomToolDefList varName="customtooldeflist">
- <CustomToolDef>
-  <Definition>
-   <Name>EchoP4Tool</Name>
-   <Command>python</Command>
-   <Arguments>main.py $r $c</Arguments>
-   <Shortcut></Shortcut>
-   <InitDir>P4TOOLS_PATH</InitDir>
-  </Definition>
- </CustomToolDef>
- <Separator/>
+    <CustomToolDef>
+        <Definition>
+            <Name>EchoP4Tool</Name>
+            <Command>P4TOOLS_EXE_PATH</Command>
+            <Arguments></Arguments>
+            <Shortcut></Shortcut>
+            <InitDir>P4TOOLS_BIN_PATH</InitDir>
+        </Definition>
+    </CustomToolDef>
+    <Separator />
 </CustomToolDefList>
