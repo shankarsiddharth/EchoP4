@@ -12,7 +12,7 @@ class ApplicationInitialSetup(object):
 
     def __init__(self):
         # Log the dev mode flag
-        print("sys.flags.dev_mode : %s", sys.flags.dev_mode)
+        # print("sys.flags.dev_mode : %s", sys.flags.dev_mode)
 
         self.user_echo_p4_config: EchoP4Config = EchoP4Config()
         self.user_p4_config: P4Config = P4Config()
@@ -51,6 +51,7 @@ class ApplicationInitialSetup(object):
             while not is_login_success:
                 log.info("P4 login failed with the saved data.")
                 user_p4_config.delete_user_p4_config_file()
+                p4th.delete_key()
                 log.info("Resetting the application config file...")
                 self.user_echo_p4_config = EchoP4Config()
                 self.user_echo_p4_config_data = p4th.get_user_echo_p4_config_data()
@@ -65,7 +66,7 @@ class ApplicationInitialSetup(object):
         if self.user_p4_group_config_data is None:
             log.info("No P4 Group Config file found.")
             log.info("Trying to create a new P4 Group config file for the current user...")
-            self.check_user_p4_config()
+            # self.check_user_p4_config()
             self.user_p4_group_info_config = P4GroupInfoConfig(self.user_echo_p4_config_data, self.user_p4_config_data)
             if self.user_p4_group_info_config.is_login_success():
                 if self.user_p4_group_info_config.is_group_list_empty():
@@ -76,8 +77,9 @@ class ApplicationInitialSetup(object):
                 log.info("P4 login failed with the saved credentials.")
                 log.info("Resetting the P4 Config file...")
                 self.user_p4_config.delete_user_p4_config_file()
+                p4th.delete_key()
                 self.user_p4_config_data = p4th.get_user_p4_config_data()
-                self.check_user_p4_config()
+                # self.check_user_p4_config()
             self.user_p4_group_config_data = p4th.get_user_p4_group_config_data()
             log.info("New P4 Group config file created for the current user.")
         else:

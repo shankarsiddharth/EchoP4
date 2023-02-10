@@ -40,7 +40,7 @@ class P4GroupInfoConfigController(object):
         try:
             # p4.client = client
             p4.connect()
-            p4.run_login()
+            # p4.run_login()
 
             result['login_success'] = True
 
@@ -100,7 +100,7 @@ class P4GroupInfoConfigController(object):
         try:
             # p4.client = client
             p4.connect()
-            p4.run_login()
+            # p4.run_login()
 
             result['login_success'] = True
 
@@ -379,13 +379,13 @@ class P4GroupInfoUI(threading.Thread):
             dpg.add_key_press_handler(tag=self.enter_key_press_handler_tag, key=dpg.mvKey_Return, callback=self.__enter_clicked__)
 
         with dpg.window(label=self.window_title, tag=self.window_title, no_title_bar=False, no_close=True):
-            dpg.add_spacer(height=25)
+            dpg.add_spacer(height=10)
             dpg.add_text("Choose a Perforce group/project to configure:")
             dpg.add_listbox(items=self.p4_group_list, tag=self.group_list_tag, default_value=self.p4_group_list[0], width=500, num_items=5,
                             callback=self.__group_listbox_callback__)
-            dpg.add_spacer(height=25)
+            dpg.add_spacer(height=10)
             dpg.add_button(label="Select Group/Project", tag=self.select_group_button_tag, callback=self.__select_group_project_clicked__, show=False, enabled=False)
-            dpg.add_spacer(height=50)
+            dpg.add_spacer(height=10)
             dpg.add_separator()
             dpg.add_spacer(height=5)
             dpg.add_text("Log")

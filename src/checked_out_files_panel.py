@@ -56,7 +56,7 @@ class CheckedOutFilesController:
         try:
             # p4.client = client
             p4.connect()
-            p4.run_login()
+            # p4.run_login()
 
             p4_client_detail_list = p4.run("client", "-o")
             if len(p4_client_detail_list) == 0:
@@ -110,8 +110,10 @@ class CheckedOutFilesController:
             p4.disconnect()
         except P4Exception as e:
             log.exception(e)
+            raise AppError(e, should_reset_data=True)
         except BaseException as e:
             log.exception(e)
+            raise AppError(e, should_reset_data=True)
         finally:
             if p4.connected():
                 p4.disconnect()
