@@ -56,14 +56,16 @@ class AppErrorUI(object):
 
     def __close_button_clicked__(self, sender, data):
         dpg.configure_item(self.close_button_tag, show=False)
-        dpg.configure_item(self.reset_data_button_tag, show=False)
+        if self.should_reset_data:
+            dpg.configure_item(self.reset_data_button_tag, show=False)
         log.info("User requested to close the application.")
         self.close_ui()
 
     def __reset_data_button_clicked__(self, sender, data):
         exception_message = ''
         dpg.configure_item(self.error_message_text_tag, default_value="Trying to reset user data...")
-        dpg.configure_item(self.reset_data_button_tag, show=False)
+        if self.should_reset_data:
+            dpg.configure_item(self.reset_data_button_tag, show=False)
         dpg.configure_item(self.reset_data_group_tag, show=False)
         try:
             p4th.reset_user_data()
