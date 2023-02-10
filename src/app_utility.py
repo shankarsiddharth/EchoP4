@@ -32,6 +32,8 @@ class AppUtilityController(object):
         # is_menu_close_button_clicked = False
         self.is_window_close_button_clicked = False
 
+        self.should_clear_project_saved = False
+
         self.root_path = p4th.get_root_folder()
         self.project_path = os.path.dirname(self.root_path)
 
@@ -265,7 +267,7 @@ class AppUtilityController(object):
                 log.success("Deleted Solution File: " + file_path)
             else:
                 log.warning("Solution File Does Not Exist: " + file_path)
-                
+
 
 class AppUtilityUI(threading.Thread):
     __minimum_width__ = 1200
@@ -318,7 +320,23 @@ class AppUtilityUI(threading.Thread):
         self.red_button_theme_tag = "Red Button Theme"
         self.red_collapsing_header_theme_tag = "Red Collapsing Header Theme"
 
-        # ***** Command Window ***** #
+        # ***** START Command Window ***** #
+
+        # One-Click Actions
+        self.one_click_actions_tag = "One-Click Actions"
+
+        self.one_click_actions_make_writable_tree_tag = "Make Writable (One-Click) "  # Trailing Space is intentional to avoid id conflict with the button id below
+        self.one_click_writable_tag = "Make Writable (One-Click)"
+        self.one_click_actions_make_writable__help_message = "Remove Read-Only Attribute From All Files in Binaries & Source\nfolders of the Project & project Plugins."
+
+        self.one_click_actions_clear_tree_tag = "Clear (One-Click) "  # Trailing Space is intentional to avoid id conflict with the button id below
+        self.one_click_clear_tag = "Clear (One-Click)"
+        self.one_click_actions_clear_help_message = "Delete All Binaries & Intermediate Files for the Project & All the project Plugins." \
+                                                    "\nAlso, the project solution file."
+
+        self.one_click_saved_tag = "Include Saved Folder (One-Click)"
+        self.one_click_saved_help_message = "Include Saved Folder to Clear along with Binaries & Intermediate Files"
+
         # Make Writable
         self.make_writable_tag = "Make Files Writable (Binaries & Source)"
         self.make_writable_project_binaries_tree_tag = "Project Binaries"
@@ -365,6 +383,8 @@ class AppUtilityUI(threading.Thread):
 
         self.clear_project_solution_files_tag = "Delete Project Solution Files"
         self.clear_solution_files_help_message = "(Delete the Solution Files)\n"
+
+        # ***** END Command Window ***** #
 
         # Checked Out Files
         self.checked_out_files_tag = "Checked Out Files"
@@ -415,14 +435,47 @@ class AppUtilityUI(threading.Thread):
         with dpg.tooltip(t):
             dpg.add_text(message)
 
+    def __callback_one_click_writable__(self, sender, data):
+        log.trace("User clicked on One-Click Writable button.")
+        dpg.configure_item(self.make_project_binaries_writable_tag, show=False)
+        self.app_utility_controller.make_project_binaries_writable()
+        self.app_utility_controller.make_project_source_writable()
+        self.app_utility_controller.make_project_plugins_binaries_writable()
+        self.app_utility_controller.make_project_plugins_source_writable()
+        dpg.configure_item(self.make_project_binaries_writable_tag, show=True)
+
+    def __callback_one_click_clear__(self, sender, data):
+        log.trace("User clicked on One-Click Clear button.")
+        dpg.configure_item(self.clear_project_binaries_tag, show=False)
+        self.app_utility_controller.delete_project_binaries()
+        self.app_utility_controller.delete_project_intermediate()
+        self.app_utility_controller.delete_project_solution_files()
+        self.app_utility_controller.delete_plugin_binaries()
+        self.app_utility_controller.delete_plugin_intermediate()
+        self.app_utility_controller.delete_developer_plugin_binaries()
+        self.app_utility_controller.delete_developer_plugin_intermediate()
+        if self.app_utility_controller.should_clear_project_saved:
+            self.app_utility_controller.delete_project_saved()
+            self.app_utility_controller.delete_plugin_saved()
+            self.app_utility_controller.delete_developer_plugin_saved()
+        dpg.configure_item(self.one_click_saved_tag, default_value=False)
+        dpg.configure_item(self.clear_project_binaries_tag, show=True)
+
+    def __callback_one_click_saved__(self, sender, data):
+        should_clear_project_saved = dpg.get_value(sender)
+        log.trace("User clicked on One-Click Saved button.")
+        dpg.configure_item(self.clear_project_saved_tag, show=False)
+        self.app_utility_controller.should_clear_project_saved = should_clear_project_saved
+        dpg.configure_item(self.clear_project_saved_tag, show=True)
+
     def __make_project_binaries_writable__(self, sender, data):
-        log.info("User clicked on the Make Project Binaries Writable button.")
+        log.trace("User clicked on the Make Project Binaries Writable button.")
         dpg.configure_item(self.make_project_binaries_writable_tag, show=False)
         self.app_utility_controller.make_project_binaries_writable()
         dpg.configure_item(self.make_project_binaries_writable_tag, show=True)
 
     def __make_plugin_binaries_writable__(self, sender, data):
-        log.info("User clicked on the Make Plugin Binaries Writable button.")
+        log.trace("User clicked on the Make Plugin Binaries Writable button.")
         dpg.configure_item(self.make_plugin_binaries_writable_tag, show=False)
         self.app_utility_controller.make_project_plugins_binaries_writable()
         self.app_utility_controller.make_developer_plugins_binaries_writable()
@@ -430,59 +483,59 @@ class AppUtilityUI(threading.Thread):
         pass
 
     def __make_project_source_writable__(self, sender, data):
-        log.info("User clicked on the Make Project Source Writable button.")
+        log.trace("User clicked on the Make Project Source Writable button.")
         dpg.configure_item(self.make_project_source_writable_tag, show=False)
         self.app_utility_controller.make_project_source_writable()
         dpg.configure_item(self.make_project_source_writable_tag, show=True)
 
     def __make_plugin_source_writable__(self, sender, data):
-        log.info("User clicked on the Make Plugin Source Writable button.")
+        log.trace("User clicked on the Make Plugin Source Writable button.")
         dpg.configure_item(self.make_plugin_source_writable_tag, show=False)
         self.app_utility_controller.make_project_plugins_source_writable()
         self.app_utility_controller.make_developer_plugins_source_writable()
         dpg.configure_item(self.make_plugin_source_writable_tag, show=True)
 
     def __clear_project_binaries__(self, sender, data):
-        log.info("User clicked on the Clear Project Binaries button.")
+        log.trace("User clicked on the Clear Project Binaries button.")
         dpg.configure_item(self.clear_project_binaries_tag, show=False)
         self.app_utility_controller.delete_project_binaries()
         dpg.configure_item(self.clear_project_binaries_tag, show=True)
 
     def __clear_plugin_binaries__(self, sender, data):
-        log.info("User clicked on the Clear Plugin Binaries button.")
+        log.trace("User clicked on the Clear Plugin Binaries button.")
         dpg.configure_item(self.clear_plugin_binaries_tag, show=False)
         self.app_utility_controller.delete_plugin_binaries()
         self.app_utility_controller.delete_developer_plugin_binaries()
         dpg.configure_item(self.clear_plugin_binaries_tag, show=True)
 
     def __clear_project_intermediate__(self, sender, data):
-        log.info("User clicked on the Clear Project Intermediate button.")
+        log.trace("User clicked on the Clear Project Intermediate button.")
         dpg.configure_item(self.clear_project_intermediate_tag, show=False)
         self.app_utility_controller.delete_project_intermediate()
         dpg.configure_item(self.clear_project_intermediate_tag, show=True)
 
     def __clear_plugin_intermediate__(self, sender, data):
-        log.info("User clicked on the Clear Plugin Intermediate button.")
+        log.trace("User clicked on the Clear Plugin Intermediate button.")
         dpg.configure_item(self.clear_plugin_intermediate_tag, show=False)
         self.app_utility_controller.delete_plugin_intermediate()
         self.app_utility_controller.delete_developer_plugin_intermediate()
         dpg.configure_item(self.clear_plugin_intermediate_tag, show=True)
 
     def __clear_project_saved__(self, sender, data):
-        log.info("User clicked on the Clear Project Saved button.")
+        log.trace("User clicked on the Clear Project Saved button.")
         dpg.configure_item(self.clear_project_saved_tag, show=False)
         self.app_utility_controller.delete_project_saved()
         dpg.configure_item(self.clear_project_saved_tag, show=True)
 
     def __clear_plugin_saved__(self, sender, data):
-        log.info("User clicked on the Clear Plugin Saved button.")
+        log.trace("User clicked on the Clear Plugin Saved button.")
         dpg.configure_item(self.clear_plugin_saved_tag, show=False)
         self.app_utility_controller.delete_plugin_saved()
         self.app_utility_controller.delete_developer_plugin_saved()
         dpg.configure_item(self.clear_plugin_saved_tag, show=True)
 
     def __clear_project_solution_files__(self, sender, data):
-        log.info("User clicked on the Clear Project Solution Files button.")
+        log.trace("User clicked on the Clear Project Solution Files button.")
         dpg.configure_item(self.clear_project_solution_files_tag, show=False)
         self.app_utility_controller.delete_project_solution_files()
         dpg.configure_item(self.clear_project_solution_files_tag, show=True)
@@ -543,6 +596,21 @@ class AppUtilityUI(threading.Thread):
 
         # Command Window
         with dpg.window(label=self.command_window_title, tag=self.command_window_title, no_title_bar=False, no_close=True):
+            # One-Click Actions
+            with dpg.collapsing_header(label=self.one_click_actions_tag, tag=self.one_click_actions_tag, default_open=True):
+                with dpg.tree_node(label=self.one_click_actions_make_writable_tree_tag, tag=self.one_click_actions_make_writable_tree_tag, default_open=True):
+                    dpg.add_button(label=self.one_click_writable_tag, tag=self.one_click_writable_tag, callback=self.__callback_one_click_writable__)
+                    dpg.bind_item_font(dpg.last_item(), default_bold_font)
+                    self._help(self.one_click_actions_make_writable__help_message)
+                    dpg.add_separator()
+                with dpg.tree_node(label=self.one_click_actions_clear_tree_tag, tag=self.one_click_actions_clear_tree_tag, default_open=True):
+                    dpg.add_checkbox(label=self.one_click_saved_tag, tag=self.one_click_saved_tag, default_value=False, callback=self.__callback_one_click_saved__)
+                    self._help(self.one_click_saved_help_message)
+                    dpg.add_button(label=self.one_click_clear_tag, tag=self.one_click_clear_tag, callback=self.__callback_one_click_clear__)
+                    dpg.bind_item_font(dpg.last_item(), default_bold_font)
+                    dpg.bind_item_theme(dpg.last_item(), self.red_button_theme_tag)
+                    self._help(self.one_click_actions_clear_help_message)
+                    dpg.add_separator()
             # Make Files Writable
             with dpg.collapsing_header(label=self.make_writable_tag, tag=self.make_writable_tag, default_open=True):
                 with dpg.tree_node(label=self.make_writable_project_binaries_tree_tag, tag=self.make_writable_project_binaries_tree_tag, default_open=True):
