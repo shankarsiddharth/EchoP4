@@ -11,6 +11,7 @@ import dearpygui.dearpygui as dpg
 from P4 import P4, P4Exception
 from dearpygui_ext import themes
 
+import app_version as av
 import echo_p4_constants as ep4c
 import p4_tools_helper as p4th
 from app_error import AppError
@@ -310,7 +311,7 @@ class AppUtilityUI(threading.Thread):
             viewport_height = self.__minimum_height__
         self.VIEWPORT_WIDTH = viewport_width
         self.VIEWPORT_HEIGHT = viewport_height
-        self.viewport_title = "Echo P4 Tool"
+        self.viewport_title = "Echo P4 " + " - " + av.APP_VERSION_STRING
         self.command_window_title = "Echo P4 Commands"
         self.user_close_ui = False
         self.reset_user_data = False
@@ -320,9 +321,11 @@ class AppUtilityUI(threading.Thread):
         self.file_menu: str = "File"
         self.ui_menu: str = "UI"
         self.data_menu: str = "Data"
+        self.about_menu: str = "About"
         self.save_current_layout_to_dpg_ini: str = "Save Current Layout"
         self.reset_to_default_layout_tag: str = "Reset to Default Layout"
         self.reset_user_data_tag: str = "Reset User Data"
+        self.about_menu_version_tag: str = "Version"
 
         # Theme
         self.red_button_theme_tag = "Red Button Theme"
@@ -432,6 +435,9 @@ class AppUtilityUI(threading.Thread):
         self.exception_message = 'Please, Confirm to reset user data.'
         self.app_utility_controller.is_window_close_button_clicked = True
         self.reset_user_data = True
+        pass
+
+    def about_callback(self):
         pass
 
     def _help(self, message):
@@ -558,8 +564,8 @@ class AppUtilityUI(threading.Thread):
         dark_theme_id = themes.create_theme_imgui_dark()
         dpg.bind_theme(dark_theme_id)
 
-        dpg.configure_app(manual_callback_management=sys.flags.dev_mode, docking=True, docking_space=True, init_file="../config/" + ep4c.DPG_INI_FILE_NAME,
-                          load_init_file=True, auto_device=True)
+        dpg.configure_app(manual_callback_management=sys.flags.dev_mode, docking=True, docking_space=True,
+                          load_init_file=self.dpg_ini_file_path, auto_device=True)
 
         dpg.create_viewport(title=self.viewport_title, width=self.VIEWPORT_WIDTH, height=self.VIEWPORT_HEIGHT)
 
@@ -601,6 +607,9 @@ class AppUtilityUI(threading.Thread):
             # Data Menu
             with dpg.menu(label=self.data_menu, tag=self.data_menu):
                 dpg.add_menu_item(label=self.reset_user_data_tag, tag=self.reset_user_data_tag, callback=self.reset_user_data_callback)
+            # About Menu
+            with dpg.menu(label=self.about_menu, tag=self.about_menu):
+                dpg.add_menu_item(label=av.APP_VERSION_STRING, tag=self.about_menu_version_tag, callback=self.about_callback)
 
         # Command Window
         with dpg.window(label=self.command_window_title, tag=self.command_window_title, no_title_bar=False, no_close=True):
