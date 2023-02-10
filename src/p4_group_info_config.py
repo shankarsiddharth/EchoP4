@@ -302,12 +302,17 @@ class P4GroupInfoUI(threading.Thread):
         dpg.set_value(self.simple_log_tag, log_text)
         log.info(log_text)
 
-        result = self.p4_group_config_controller.try_initializing_p4_group_config(self.user_echo_p4_config_data, selected_group)
-        if not result['success']:
-            dpg.set_value(self.simple_log_tag, result['message'])
-            log.error(result['message'])
-            dpg.configure_item(self.select_group_button_tag, enabled=True, show=True)
-            return
+        try:
+            result = self.p4_group_config_controller.try_initializing_p4_group_config(self.user_echo_p4_config_data, selected_group)
+            if not result['success']:
+                dpg.set_value(self.simple_log_tag, result['message'])
+                log.error(result['message'])
+                dpg.configure_item(self.select_group_button_tag, enabled=True, show=True)
+                return
+        except BaseException as e:
+            log.exception(e)
+            self.auto_close_ui = True
+            self.exception = e
 
         self.auto_close_ui = True
 
@@ -411,6 +416,9 @@ class P4GroupInfoUI(threading.Thread):
 
         dpg.destroy_context()
 
+        if self.exception is not None:
+            raise self.exception
+
 
 class P4GroupInfoConfig(object):
 
@@ -421,7 +429,8 @@ class P4GroupInfoConfig(object):
         try:
             self.p4_group_config_ui.join()
         except BaseException as e:
-            raise e
+            user_message = "Error occurred while configuring Perforce group/project.\nReset the user data and re-open the application and try again." + "\n\nException Occurred:\n" + str(e)
+            raise AppError(user_message, should_reset_data=True)
 
     def __init__(self, user_echo_p4_config_data=None, user_p4_config_data=None):
         if user_echo_p4_config_data is None or user_p4_config_data is None:

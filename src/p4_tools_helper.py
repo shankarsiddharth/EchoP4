@@ -192,6 +192,11 @@ def reset_user_data():
         os.remove(group_members_info_file_path)
     # Delete the key file
     delete_key()
+    # Delete DPG ini file
+    dpg_ini_file_path = get_dpg_ini_file_path()
+    dpg_ini_file = pathlib.Path(dpg_ini_file_path)
+    if dpg_ini_file.exists():
+        os.remove(dpg_ini_file_path)
 
 
 def get_dpg_ini_file_path():
