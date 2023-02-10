@@ -1,5 +1,6 @@
-import configparser
 import os
+import sys
+import configparser
 import pathlib
 import shutil
 
@@ -20,7 +21,13 @@ DEFAULT_BOLD_FONT_SIZE = 16
 
 
 def get_root_folder():
-    bin_src_folder = os.path.dirname(os.path.realpath(__file__))
+    application_path = ""
+    if getattr(sys, 'frozen', False):
+        application_path = os.path.dirname(sys.executable)
+    elif __file__:
+        application_path = os.path.dirname(__file__)
+    # bin_src_folder = os.path.dirname(os.path.realpath(__file__))
+    bin_src_folder = application_path
     root_folder_path = os.path.dirname(bin_src_folder)
     return root_folder_path
 
