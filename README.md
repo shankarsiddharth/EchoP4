@@ -28,7 +28,7 @@ The folder structure should look like this:
 ```
 
 ## Initial Configuration Setup
-1. Run the `EchoP4.exe` file.
+1. Run the `EchoP4.exe` file located in the `bin` folder. `EchoP4/bin/EchoP4.exe`
 2. Enter the port, username, and password for the P4 server in the `Echo P4 Config UI`.
    > Note: The password is encrypted and the encryption key is stored in a separate file.
 3. Click on the `Login` button.
