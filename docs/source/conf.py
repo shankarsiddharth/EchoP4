@@ -8,7 +8,7 @@
 
 project = 'EchoP4'
 copyright = '2023, xtraware'
-author = 'xtraware'
+author = 'Shankar Siddharth K A'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
